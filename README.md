@@ -14,10 +14,11 @@ Android application for hotel management built with Kotlin and Jetpack Compose.
 If you encounter build errors related to cached artifacts (e.g., Hilt/kapt errors), perform a clean build:
 
 ```bash
-# Clean all build artifacts
-./gradlew clean
+# Use the provided clean script
+./clean-build.sh
 
-# Remove Gradle cache (if needed)
+# Or manually:
+./gradlew clean
 rm -rf .gradle/
 rm -rf app/build/
 rm -rf build/
@@ -25,6 +26,13 @@ rm -rf build/
 # Rebuild
 ./gradlew assembleDebug
 ```
+
+### CI/CD Builds
+
+For CI/CD environments, ensure a clean build by:
+- Using `./gradlew clean build` or running the `clean-build.sh` script before building
+- Not caching `.gradle/` or `build/` directories between builds if experiencing issues
+- Using Gradle's `--no-build-cache` flag if persistent caching issues occur
 
 ### Common Issues
 
