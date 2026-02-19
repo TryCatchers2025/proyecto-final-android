@@ -2,16 +2,19 @@ package com.trycatchers.hotel.data.repositories
 
 import com.trycatchers.hotel.data.api.RoomService
 import com.trycatchers.hotel.data.dtos.RoomDto
+import com.trycatchers.hotel.data.dtos.RoomSearchFilters
 import com.trycatchers.hotel.data.dtos.toDomain
 import com.trycatchers.hotel.data.models.Room
 import javax.inject.Inject
 
-class RoomRepository @Inject constructor(
-    private val roomService: RoomService
-) {
+class RoomRepository @Inject constructor(private val roomService: RoomService) {
 
     suspend fun getAll(): List<Room> {
         return roomService.getAllRooms().toDomain()
+    }
+
+    suspend fun searchAvailable(filters: RoomSearchFilters): List<Room> {
+        return roomService.searchAvailableRooms(filters.toQueryMap()).toDomain()
     }
 
     suspend fun getById(id: String): Room {
@@ -33,9 +36,21 @@ class RoomRepository @Inject constructor(
     }
 }
 
-fun Room.toDto() = RoomDto(
-    roomId = roomId,
-    number = number,
-    price = price,
-    type = type
-)
+fun Room.toDto(): RoomDto =
+        RoomDto(
+                id = id.ifBlank { null },
+                name = name,
+                type = type,
+                number = number,
+                description = description,
+                mainImage = mainImage,
+                extraImages = extraImages.ifEmpty { null },
+                pricePerNight = pricePerNight,
+                rate = rate,
+                occupancyLimit = occupancyLimit,
+                isAvailable = isAvailable,
+                cradle = hasCradle,
+                extraBed = hasExtraBed,
+                offerPercentage = offerPercentage,
+                extras = extras.ifEmpty { null }
+        )
