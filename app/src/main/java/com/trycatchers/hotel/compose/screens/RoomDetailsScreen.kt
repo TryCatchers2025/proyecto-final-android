@@ -25,8 +25,6 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -34,9 +32,9 @@ import coil.compose.AsyncImage
 import com.trycatchers.hotel.compose.components.booking.BookingErrorCard
 import com.trycatchers.hotel.data.models.Review
 import com.trycatchers.hotel.data.models.Room
-import com.trycatchers.hotel.viewmodels.RoomDetailsUiState
 import com.trycatchers.hotel.viewmodels.RoomDetailsViewModel
 
+/** Pantalla de detalle de habitación con galería, reseñas y CTA de reserva. */
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 @Composable
 fun RoomDetailsScreen(
@@ -51,23 +49,26 @@ fun RoomDetailsScreen(
             if (state.room != null) {
                 BookingBottomBar(room = state.room!!, onBook = { onBookRoom(state.room!!.id) })
             }
-        }, modifier = Modifier.fillMaxSize()
+        },
+        modifier = Modifier.fillMaxSize()
     ) { innerPadding ->
         when {
             state.isLoading -> LoadingView(modifier = Modifier.padding(innerPadding))
-            state.errorMessage != null -> ErrorView(
-                message = state.errorMessage!!,
-                onRetry = viewModel::loadRoomDetails,
-                onBack = onNavigateBack,
-                modifier = Modifier.padding(innerPadding)
-            )
+            state.errorMessage != null ->
+                ErrorView(
+                    message = state.errorMessage!!,
+                    onRetry = viewModel::loadRoomDetails,
+                    onBack = onNavigateBack,
+                    modifier = Modifier.padding(innerPadding)
+                )
 
-            state.room != null -> RoomDetailsContent(
-                room = state.room!!,
-                reviews = state.reviews,
-                onBack = onNavigateBack,
-                modifier = Modifier.padding(innerPadding)
-            )
+            state.room != null ->
+                RoomDetailsContent(
+                    room = state.room!!,
+                    reviews = state.reviews,
+                    onBack = onNavigateBack,
+                    modifier = Modifier.padding(innerPadding)
+                )
         }
     }
 }
@@ -91,15 +92,9 @@ private fun ErrorView(
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
     ) {
-        BookingErrorCard(
-            message = message,
-            actionLabel = "Reintentar",
-            onAction = onRetry
-        )
+        BookingErrorCard(message = message, actionLabel = "Reintentar", onAction = onRetry)
         Spacer(Modifier.height(16.dp))
-        TextButton(onClick = onBack) {
-            Text("Volver")
-        }
+        TextButton(onClick = onBack) { Text("Volver") }
     }
 }
 
@@ -112,35 +107,60 @@ private fun RoomDetailsContent(
     modifier: Modifier = Modifier
 ) {
     val images = listOfNotNull(room.mainImage) + room.extraImages
-    val pagerState = rememberPagerState(pageCount = { images.size })
+    val pagerState = rememberPagerState(pageCount = { images.size.coerceAtLeast(1) })
 
     LazyColumn(modifier = modifier.fillMaxSize()) {
         // Image Header
         item {
             Box(modifier = Modifier.fillMaxWidth().height(300.dp)) {
-                HorizontalPager(
-                    state = pagerState,
-                    modifier = Modifier.fillMaxSize()
-                ) { page ->
-                    AsyncImage(
-                        model = images[page],
-                        contentDescription = null,
-                        modifier = Modifier.fillMaxSize(),
-                        contentScale = ContentScale.Crop
-                    )
+                if (images.isEmpty()) {
+                    // Placeholder when no images
+                    Box(
+                        modifier =
+                            Modifier.fillMaxSize()
+                                .background(MaterialTheme.colorScheme.surfaceVariant),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Column(
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                            verticalArrangement = Arrangement.Center
+                        ) {
+                            Text(
+                                text = "Imagen no disponible",
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
+                    }
+                } else {
+                    HorizontalPager(state = pagerState, modifier = Modifier.fillMaxSize()) { page ->
+                        AsyncImage(
+                            model = images[page],
+                            contentDescription = null,
+                            modifier = Modifier.fillMaxSize(),
+                            contentScale = ContentScale.Crop
+                        )
+                    }
                 }
 
                 // Gradient overlay
                 Box(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .background(
-                            Brush.verticalGradient(
-                                colors = listOf(Color.Black.copy(alpha = 0.4f), Color.Transparent, Color.Transparent),
-                                startY = 0f,
-                                endY = Float.POSITIVE_INFINITY
+                    modifier =
+                        Modifier.fillMaxSize()
+                            .background(
+                                Brush.verticalGradient(
+                                    colors =
+                                        listOf(
+                                            Color.Black.copy(
+                                                alpha = 0.4f
+                                            ),
+                                            Color.Transparent,
+                                            Color.Transparent
+                                        ),
+                                    startY = 0f,
+                                    endY = Float.POSITIVE_INFINITY
+                                )
                             )
-                        )
                 )
 
                 // Back Button
@@ -158,20 +178,14 @@ private fun RoomDetailsContent(
                 // Pager Indicators
                 if (images.size > 1) {
                     Row(
-                        modifier = Modifier
-                            .align(Alignment.BottomCenter)
-                            .padding(16.dp),
+                        modifier = Modifier.align(Alignment.BottomCenter).padding(16.dp),
                         horizontalArrangement = Arrangement.spacedBy(4.dp)
                     ) {
                         repeat(images.size) { index ->
                             val color =
-                                if (pagerState.currentPage == index) Color.White else Color.White.copy(alpha = 0.5f)
-                            Box(
-                                modifier = Modifier
-                                    .size(8.dp)
-                                    .clip(CircleShape)
-                                    .background(color)
-                            )
+                                if (pagerState.currentPage == index) Color.White
+                                else Color.White.copy(alpha = 0.5f)
+                            Box(modifier = Modifier.size(8.dp).clip(CircleShape).background(color))
                         }
                     }
                 }
@@ -197,9 +211,17 @@ private fun RoomDetailsContent(
                                 modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
-                                Icon(Icons.Filled.Star, null, Modifier.size(16.dp), tint = Color(0xFFFFC107))
+                                Icon(
+                                    Icons.Filled.Star,
+                                    null,
+                                    Modifier.size(16.dp),
+                                    tint = Color(0xFFFFC107)
+                                )
                                 Spacer(Modifier.width(4.dp))
-                                Text("%.1f".format(room.rate), style = MaterialTheme.typography.labelLarge)
+                                Text(
+                                    "%.1f".format(room.rate),
+                                    style = MaterialTheme.typography.labelLarge
+                                )
                             }
                         }
                     }
@@ -252,9 +274,7 @@ private fun RoomDetailsContent(
                     modifier = Modifier.padding(20.dp)
                 )
             }
-            items(reviews) { review ->
-                ReviewItem(review)
-            }
+            items(reviews) { review -> ReviewItem(review) }
         } else {
             item {
                 Spacer(Modifier.height(100.dp)) // Padding for bottom bar
@@ -292,7 +312,9 @@ private fun ReviewItem(review: Review) {
         Row(verticalAlignment = Alignment.CenterVertically) {
             repeat(5) { index ->
                 Icon(
-                    imageVector = if (index < review.rate) Icons.Filled.Star else Icons.Outlined.StarOutline,
+                    imageVector =
+                        if (index < review.rate) Icons.Filled.Star
+                        else Icons.Outlined.StarOutline,
                     contentDescription = null,
                     tint = Color(0xFFFFC107),
                     modifier = Modifier.size(16.dp)
@@ -316,15 +338,9 @@ private fun ReviewItem(review: Review) {
 
 @Composable
 private fun BookingBottomBar(room: Room, onBook: () -> Unit) {
-    Surface(
-        shadowElevation = 8.dp,
-        color = MaterialTheme.colorScheme.surface
-    ) {
+    Surface(shadowElevation = 8.dp, color = MaterialTheme.colorScheme.surface) {
         Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(20.dp)
-                .navigationBarsPadding(),
+            modifier = Modifier.fillMaxWidth().padding(20.dp).navigationBarsPadding(),
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
@@ -336,7 +352,12 @@ private fun BookingBottomBar(room: Room, onBook: () -> Unit) {
                     val original = price / (1 - offer / 100)
                     Text(
                         text = "%.2f €".format(original),
-                        style = MaterialTheme.typography.bodySmall.copy(textDecoration = androidx.compose.ui.text.style.TextDecoration.LineThrough),
+                        style =
+                            MaterialTheme.typography.bodySmall.copy(
+                                textDecoration =
+                                    androidx.compose.ui.text.style.TextDecoration
+                                        .LineThrough
+                            ),
                         color = MaterialTheme.colorScheme.error
                     )
                 }
@@ -360,9 +381,7 @@ private fun BookingBottomBar(room: Room, onBook: () -> Unit) {
                 onClick = onBook,
                 modifier = Modifier.height(48.dp),
                 shape = RoundedCornerShape(12.dp)
-            ) {
-                Text("Reservar ahora")
-            }
+            ) { Text("Reservar ahora") }
         }
     }
 }
