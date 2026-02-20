@@ -15,10 +15,10 @@ import com.trycatchers.hotel.utils.formatDate
 
 @Composable
 fun DatePickerRange(
-        startDate: Long? = null,
-        endDate: Long? = null,
-        modifier: Modifier = Modifier,
-        onDateRangeSelected: (Pair<Long?, Long?>) -> Unit
+    startDate: Long? = null,
+    endDate: Long? = null,
+    modifier: Modifier = Modifier,
+    onDateRangeSelected: (Pair<Long?, Long?>) -> Unit
 ) {
     var startDateMillis by remember { mutableStateOf(startDate) }
     var endDateMillis by remember { mutableStateOf(endDate) }
@@ -27,28 +27,28 @@ fun DatePickerRange(
 
     Column(modifier = modifier) {
         DateRangeFields(
-                startDate = formatDate(startDateMillis),
-                endDate = formatDate(endDateMillis),
-                hasInteracted = hasInteracted,
-                startDateMillis = startDateMillis,
-                endDateMillis = endDateMillis,
-                onFieldsClick = {
-                    hasInteracted = true
-                    showDateRangePicker = true
-                }
+            startDate = formatDate(startDateMillis),
+            endDate = formatDate(endDateMillis),
+            hasInteracted = hasInteracted,
+            startDateMillis = startDateMillis,
+            endDateMillis = endDateMillis,
+            onFieldsClick = {
+                hasInteracted = true
+                showDateRangePicker = true
+            }
         )
 
         if (showDateRangePicker) {
             DateRangePickerModal(
-                    initialStartDate = startDateMillis,
-                    initialEndDate = endDateMillis,
-                    onDateRangeSelected = { startMillis, endMillis ->
-                        startDateMillis = startMillis
-                        endDateMillis = endMillis
-                        showDateRangePicker = false
-                        onDateRangeSelected(Pair(startMillis, endMillis))
-                    },
-                    onDismiss = { showDateRangePicker = false }
+                initialStartDate = startDateMillis,
+                initialEndDate = endDateMillis,
+                onDateRangeSelected = { startMillis, endMillis ->
+                    startDateMillis = startMillis
+                    endDateMillis = endMillis
+                    showDateRangePicker = false
+                    onDateRangeSelected(Pair(startMillis, endMillis))
+                },
+                onDismiss = { showDateRangePicker = false }
             )
         }
     }
@@ -56,73 +56,73 @@ fun DatePickerRange(
 
 @Composable
 private fun DateRangeFields(
-        startDate: String,
-        endDate: String,
-        hasInteracted: Boolean,
-        startDateMillis: Long?,
-        endDateMillis: Long?,
-        onFieldsClick: () -> Unit,
-        modifier: Modifier = Modifier
+    startDate: String,
+    endDate: String,
+    hasInteracted: Boolean,
+    startDateMillis: Long?,
+    endDateMillis: Long?,
+    onFieldsClick: () -> Unit,
+    modifier: Modifier = Modifier
 ) {
     val showError = hasInteracted && (startDateMillis == null || endDateMillis == null)
     val borderColor =
-            if (showError) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.outline
+        if (showError) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.outline
 
     val labelColor =
-            if (showError) MaterialTheme.colorScheme.error
-            else MaterialTheme.colorScheme.onSurfaceVariant
+        if (showError) MaterialTheme.colorScheme.error
+        else MaterialTheme.colorScheme.onSurfaceVariant
 
     Box(modifier = modifier.fillMaxWidth().clickable(onClick = onFieldsClick)) {
         Surface(
-                shape = RoundedCornerShape(4.dp),
-                color = Color.Transparent,
-                border = BorderStroke(width = 1.dp, color = borderColor),
-                modifier = Modifier.fillMaxWidth().height(56.dp)
+            shape = RoundedCornerShape(4.dp),
+            color = Color.Transparent,
+            border = BorderStroke(width = 1.dp, color = borderColor),
+            modifier = Modifier.fillMaxWidth().height(56.dp)
         ) {
             Row(
-                    modifier = Modifier.fillMaxWidth().fillMaxHeight(),
-                    verticalAlignment = Alignment.CenterVertically
+                modifier = Modifier.fillMaxWidth().fillMaxHeight(),
+                verticalAlignment = Alignment.CenterVertically
             ) {
                 Box(
-                        modifier = Modifier.weight(1f).fillMaxHeight().padding(horizontal = 16.dp),
-                        contentAlignment = Alignment.CenterStart
+                    modifier = Modifier.weight(1f).fillMaxHeight().padding(horizontal = 16.dp),
+                    contentAlignment = Alignment.CenterStart
                 ) {
                     Column {
                         Text(
-                                text = "Check in",
-                                style = MaterialTheme.typography.labelSmall,
-                                color = labelColor,
-                                fontSize = MaterialTheme.typography.labelSmall.fontSize
+                            text = "Check in",
+                            style = MaterialTheme.typography.labelSmall,
+                            color = labelColor,
+                            fontSize = MaterialTheme.typography.labelSmall.fontSize
                         )
                         Text(
-                                text = startDate.ifEmpty { "DD/MM/YYYY" },
-                                style = MaterialTheme.typography.bodyLarge,
-                                color = labelColor
+                            text = startDate.ifEmpty { "DD/MM/YYYY" },
+                            style = MaterialTheme.typography.bodyLarge,
+                            color = labelColor
                         )
                     }
                 }
 
                 VerticalDivider(
-                        modifier = Modifier.fillMaxHeight().width(1.dp),
-                        thickness = 1.dp,
-                        color = borderColor.copy(alpha = 0.3f)
+                    modifier = Modifier.fillMaxHeight().width(1.dp),
+                    thickness = 1.dp,
+                    color = borderColor.copy(alpha = 0.3f)
                 )
 
                 Box(
-                        modifier = Modifier.weight(1f).fillMaxHeight().padding(horizontal = 16.dp),
-                        contentAlignment = Alignment.CenterStart
+                    modifier = Modifier.weight(1f).fillMaxHeight().padding(horizontal = 16.dp),
+                    contentAlignment = Alignment.CenterStart
                 ) {
                     Column {
                         Text(
-                                text = "Fecha vuelta",
-                                style = MaterialTheme.typography.labelSmall,
-                                color = labelColor,
-                                fontSize = MaterialTheme.typography.labelSmall.fontSize
+                            text = "Fecha vuelta",
+                            style = MaterialTheme.typography.labelSmall,
+                            color = labelColor,
+                            fontSize = MaterialTheme.typography.labelSmall.fontSize
                         )
                         Text(
-                                text = endDate.ifEmpty { "DD/MM/YYYY" },
-                                style = MaterialTheme.typography.bodyLarge,
-                                color = labelColor
+                            text = endDate.ifEmpty { "DD/MM/YYYY" },
+                            style = MaterialTheme.typography.bodyLarge,
+                            color = labelColor
                         )
                     }
                 }
@@ -134,43 +134,43 @@ private fun DateRangeFields(
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun DateRangePickerModal(
-        initialStartDate: Long? = null,
-        initialEndDate: Long? = null,
-        onDateRangeSelected: (Long?, Long?) -> Unit,
-        onDismiss: () -> Unit
+    initialStartDate: Long? = null,
+    initialEndDate: Long? = null,
+    onDateRangeSelected: (Long?, Long?) -> Unit,
+    onDismiss: () -> Unit
 ) {
     val dateRangePickerState =
-            rememberDateRangePickerState(
-                    initialSelectedStartDateMillis = initialStartDate,
-                    initialSelectedEndDateMillis = initialEndDate
-            )
+        rememberDateRangePickerState(
+            initialSelectedStartDateMillis = initialStartDate,
+            initialSelectedEndDateMillis = initialEndDate
+        )
 
     DatePickerDialog(
-            onDismissRequest = onDismiss,
-            confirmButton = {
-                ConfirmButton(
-                        onConfirm = {
-                            onDateRangeSelected(
-                                    dateRangePickerState.selectedStartDateMillis,
-                                    dateRangePickerState.selectedEndDateMillis
-                            )
-                            onDismiss()
-                        }
-                )
-            },
-            dismissButton = { DismissButton(onDismiss = onDismiss) }
+        onDismissRequest = onDismiss,
+        confirmButton = {
+            ConfirmButton(
+                onConfirm = {
+                    onDateRangeSelected(
+                        dateRangePickerState.selectedStartDateMillis,
+                        dateRangePickerState.selectedEndDateMillis
+                    )
+                    onDismiss()
+                }
+            )
+        },
+        dismissButton = { DismissButton(onDismiss = onDismiss) }
     ) {
         DateRangePicker(
-                state = dateRangePickerState,
-                title = { Text("Seleccionar fechas") },
-                headline = {
-                    DateRangeHeadline(
-                            startDateMillis = dateRangePickerState.selectedStartDateMillis,
-                            endDateMillis = dateRangePickerState.selectedEndDateMillis
-                    )
-                },
-                showModeToggle = false,
-                modifier = Modifier.fillMaxWidth().height(500.dp).padding(16.dp)
+            state = dateRangePickerState,
+            title = { Text("Seleccionar fechas") },
+            headline = {
+                DateRangeHeadline(
+                    startDateMillis = dateRangePickerState.selectedStartDateMillis,
+                    endDateMillis = dateRangePickerState.selectedEndDateMillis
+                )
+            },
+            showModeToggle = false,
+            modifier = Modifier.fillMaxWidth().height(500.dp).padding(16.dp)
         )
     }
 }
@@ -179,12 +179,12 @@ private fun DateRangePickerModal(
 private fun DateRangeHeadline(startDateMillis: Long?, endDateMillis: Long?) {
     Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
         Text(
-                text = startDateMillis?.let { formatDate(it) } ?: "Check-In",
-                style = MaterialTheme.typography.bodyMedium
+            text = startDateMillis?.let { formatDate(it) } ?: "Check-In",
+            style = MaterialTheme.typography.bodyMedium
         )
         Text(
-                text = endDateMillis?.let { formatDate(it) } ?: "Check-Out",
-                style = MaterialTheme.typography.bodyMedium
+            text = endDateMillis?.let { formatDate(it) } ?: "Check-Out",
+            style = MaterialTheme.typography.bodyMedium
         )
     }
 }

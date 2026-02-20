@@ -5,15 +5,15 @@ package com.trycatchers.hotel.data.dtos
  * claves del mapa generado mantienen el naming camelCase utilizado en el backend.
  */
 data class RoomSearchFilters(
-        val startDate: String,
-        val endDate: String,
-        val occupants: Int,
-        val onlyOffers: Boolean = false,
-        val needsCrib: Boolean = false,
-        val needsExtraBed: Boolean = false,
-        val isVip: Boolean = false,
-        val minPrice: Int? = null,
-        val maxPrice: Int? = null,
+    val startDate: String,
+    val endDate: String,
+    val occupants: Int,
+    val onlyOffers: Boolean = false,
+    val needsCrib: Boolean = false,
+    val needsExtraBed: Boolean = false,
+    val isVip: Boolean = false,
+    val minPrice: Int? = null,
+    val maxPrice: Int? = null,
 ) {
 
     fun toQueryMap(): Map<String, String> = buildMap {

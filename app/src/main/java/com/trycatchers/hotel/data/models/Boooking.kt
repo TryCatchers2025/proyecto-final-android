@@ -21,19 +21,19 @@ package com.trycatchers.hotel.data.models
  * @property checkOutNotified Si se envió recordatorio de check-out
  */
 data class Booking(
-        val bookingId: String? = null,
-        val userId: String,
-        val roomId: String,
-        val startDate: String,
-        val endDate: String,
-        val bookingDate: String? = null,
-        val occupants: Int,
-        val pricePerNight: Double,
-        val totalPrice: Double,
-        val discount: Double = 0.0,
-        val totalNights: Int,
-        val status: String = "active",
-        val isPaid: Boolean = false,
-        val checkInNotified: Boolean = false,
-        val checkOutNotified: Boolean = false
+    val bookingId: String? = null,
+    val userId: String,
+    val roomId: String,
+    val startDate: String,
+    val endDate: String,
+    val bookingDate: String? = null,
+    val occupants: Int,
+    val pricePerNight: Double,
+    val totalPrice: Double,
+    val discount: Double = 0.0,
+    val totalNights: Int,
+    val status: String = "active",
+    val isPaid: Boolean = false,
+    val checkInNotified: Boolean = false,
+    val checkOutNotified: Boolean = false
 )

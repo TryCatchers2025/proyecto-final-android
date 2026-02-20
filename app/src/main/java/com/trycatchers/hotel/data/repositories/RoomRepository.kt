@@ -37,20 +37,20 @@ class RoomRepository @Inject constructor(private val roomService: RoomService) {
 }
 
 fun Room.toDto(): RoomDto =
-        RoomDto(
-                id = id.ifBlank { null },
-                name = name,
-                type = type,
-                number = number,
-                description = description,
-                mainImage = mainImage,
-                extraImages = extraImages.ifEmpty { null },
-                pricePerNight = pricePerNight,
-                rate = rate,
-                occupancyLimit = occupancyLimit,
-                isAvailable = isAvailable,
-                cradle = hasCradle,
-                extraBed = hasExtraBed,
-                offerPercentage = offerPercentage,
-                extras = extras.ifEmpty { null }
-        )
+    RoomDto(
+        id = id.ifBlank { null },
+        name = name,
+        type = type,
+        number = number,
+        description = description,
+        mainImage = mainImage,
+        extraImages = extraImages.ifEmpty { null },
+        pricePerNight = pricePerNight,
+        rate = rate,
+        occupancyLimit = occupancyLimit,
+        isAvailable = isAvailable,
+        cradle = hasCradle,
+        extraBed = hasExtraBed,
+        offerPercentage = offerPercentage,
+        extras = extras.ifEmpty { null }
+    )

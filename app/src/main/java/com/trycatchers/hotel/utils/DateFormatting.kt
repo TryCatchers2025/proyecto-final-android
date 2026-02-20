@@ -5,8 +5,7 @@ import java.time.Instant
 import java.time.LocalDate
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
-import java.util.Date
-import java.util.Locale
+import java.util.*
 
 private val legacyDateFormatter = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
 private val localeEs = Locale("es", "ES")
