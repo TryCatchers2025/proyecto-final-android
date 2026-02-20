@@ -34,17 +34,7 @@ fun RoomSelectorScreen(
     viewModel: RoomFinderViewModel = hiltViewModel()
 ) {
     val searchState by viewModel.searchState.collectAsState()
-    val dates by viewModel.dates.collectAsState()
-    val occupants by viewModel.occupants.collectAsState()
-    val isVip by viewModel.isVip.collectAsState()
-    val needsExtraBed by viewModel.needsExtraBed.collectAsState()
-    val needsCrib by viewModel.needsCrib.collectAsState()
-    val onlyOffers by viewModel.onlyOffers.collectAsState()
-    val priceRange by viewModel.priceRange.collectAsState()
-    val sortOption by viewModel.sortOption.collectAsState()
-    val onlyWithExtras by viewModel.onlyWithExtras.collectAsState()
-    val onlyWithImages by viewModel.onlyWithImages.collectAsState()
-    val minimumRating by viewModel.minimumRating.collectAsState()
+    val filtersState by viewModel.filtersUiState.collectAsState()
 
     val showFilters = remember { mutableStateOf(false) }
 
@@ -52,25 +42,25 @@ fun RoomSelectorScreen(
 
     if (showFilters.value) {
         RoomFiltersSheet(
-            occupants = occupants,
+            occupants = filtersState.occupants,
             onOccupantsChange = viewModel::setOccupants,
-            isVip = isVip,
+            isVip = filtersState.isVip,
             onVipChange = viewModel::setIsVip,
-            needsExtraBed = needsExtraBed,
+            needsExtraBed = filtersState.needsExtraBed,
             onNeedsExtraBedChange = viewModel::setNeedsExtraBed,
-            needsCrib = needsCrib,
+            needsCrib = filtersState.needsCrib,
             onNeedsCribChange = viewModel::setNeedsCrib,
-            onlyOffers = onlyOffers,
+            onlyOffers = filtersState.onlyOffers,
             onOnlyOffersChange = viewModel::setOnlyOffers,
-            priceRange = priceRange,
+            priceRange = filtersState.priceRange,
             onPriceRangeChange = viewModel::setPriceRange,
-            sortOption = sortOption,
+            sortOption = filtersState.sortOption,
             onSortOptionChange = viewModel::setSortOption,
-            onlyWithExtras = onlyWithExtras,
+            onlyWithExtras = filtersState.onlyWithExtras,
             onOnlyWithExtrasChange = viewModel::setOnlyWithExtras,
-            onlyWithImages = onlyWithImages,
+            onlyWithImages = filtersState.onlyWithImages,
             onOnlyWithImagesChange = viewModel::setOnlyWithImages,
-            minimumRating = minimumRating,
+            minimumRating = filtersState.minimumRating,
             onMinimumRatingChange = viewModel::setMinimumRating,
             onDismiss = { showFilters.value = false },
             onApply = {
@@ -82,16 +72,16 @@ fun RoomSelectorScreen(
 
     RoomSelectorView(
         state = searchState,
-        dates = dates,
-        occupants = occupants,
+        dates = filtersState.dates,
+        occupants = filtersState.occupants,
         onNavigateBack = onNavigateBack,
         onRetry = { viewModel.searchAvailableRooms(forceRefresh = true) },
         onViewDetails = navigateToRoomDetails,
         onReserve = { roomId ->
-            val start = dates.first
-            val end = dates.second
+            val start = filtersState.dates.first
+            val end = filtersState.dates.second
             if (start != null && end != null) {
-                navigateToBookingSummary(roomId, start, end, occupants)
+                navigateToBookingSummary(roomId, start, end, filtersState.occupants)
             }
         },
         onShowFilters = { showFilters.value = true }

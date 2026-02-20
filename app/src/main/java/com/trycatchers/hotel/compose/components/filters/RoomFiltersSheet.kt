@@ -5,12 +5,10 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.trycatchers.hotel.compose.components.ui.DropDown
 import com.trycatchers.hotel.viewmodels.RoomFinderViewModel.RoomSortOption
-import kotlin.math.roundToInt
 
 /**
  * Bottom sheet de filtros avanzados reutilizable para listados de habitaciones.
@@ -63,18 +61,18 @@ fun RoomFiltersSheet(
 
             HorizontalDivider()
 
-            FilterToggle(label = "Cliente VIP", checked = isVip, onCheckedChange = onVipChange)
-            FilterToggle(
+            RoomFilterToggle(label = "Cliente VIP", checked = isVip, onCheckedChange = onVipChange)
+            RoomFilterToggle(
                 label = "Necesito cama extra",
                 checked = needsExtraBed,
                 onCheckedChange = onNeedsExtraBedChange
             )
-            FilterToggle(
+            RoomFilterToggle(
                 label = "Necesito cuna",
                 checked = needsCrib,
                 onCheckedChange = onNeedsCribChange
             )
-            FilterToggle(
+            RoomFilterToggle(
                 label = "Solo ofertas",
                 checked = onlyOffers,
                 onCheckedChange = onOnlyOffersChange
@@ -82,67 +80,32 @@ fun RoomFiltersSheet(
 
             HorizontalDivider()
 
-
-            Text(
-                text = "Rango de precios por noche",
-                style = MaterialTheme.typography.titleMedium,
+            RoomPriceRangeSection(
+                priceRange = priceRange,
+                onPriceRangeChange = onPriceRangeChange,
             )
-
-            RangeSlider(
-                value = priceRange,
-                onValueChange = onPriceRangeChange,
-                valueRange = 0f..500f,
-                steps = 100,
-            )
-
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween
-            ) {
-                Text(text = "${priceRange.start.toInt()}€")
-                Text(text = "${priceRange.endInclusive.toInt()}€")
-            }
 
             HorizontalDivider()
 
-            Text(text = "Ordenar por")
-            RoomSortOption.values().forEach { option ->
-                SortOptionRow(
-                    label = option.label,
-                    selected = option == sortOption,
-                    onSelected = { onSortOptionChange(option) }
-                )
-            }
+            RoomSortOptionsSection(sortOption = sortOption, onSortOptionChange = onSortOptionChange)
 
             HorizontalDivider()
 
             Text(text = "Filtros adicionales")
-            FilterToggle(
+            RoomFilterToggle(
                 label = "Solo con extras incluidos",
                 checked = onlyWithExtras,
                 onCheckedChange = onOnlyWithExtrasChange
             )
-            FilterToggle(
+            RoomFilterToggle(
                 label = "Solo con imagen",
                 checked = onlyWithImages,
                 onCheckedChange = onOnlyWithImagesChange
             )
 
-            val sliderValue = minimumRating ?: 0f
-            Text(text = "Valoración mínima")
-            Slider(
-                value = sliderValue,
-                onValueChange = { value ->
-                    val normalized = if (value < 0.5f) 0f else value.roundToInt().toFloat()
-                    onMinimumRatingChange(normalized)
-                },
-                valueRange = 0f..5f,
-                steps = 4
-            )
-            Text(
-                text =
-                    if (sliderValue <= 0f) "Cualquiera"
-                    else "${sliderValue.toInt()}+ estrellas"
+            RoomRatingSection(
+                minimumRating = minimumRating,
+                onMinimumRatingChange = onMinimumRatingChange,
             )
 
             Spacer(modifier = Modifier.height(12.dp))
@@ -153,29 +116,3 @@ fun RoomFiltersSheet(
         }
     }
 }
-
-@Composable
-private fun FilterToggle(label: String, checked: Boolean, onCheckedChange: (Boolean) -> Unit) {
-    Row(verticalAlignment = Alignment.CenterVertically) {
-        Checkbox(checked = checked, onCheckedChange = onCheckedChange)
-        Spacer(modifier = Modifier.width(8.dp))
-        Text(text = label)
-    }
-}
-
-@Composable
-private fun SortOptionRow(label: String, selected: Boolean, onSelected: () -> Unit) {
-    Row(verticalAlignment = Alignment.CenterVertically) {
-        RadioButton(selected = selected, onClick = onSelected)
-        Spacer(modifier = Modifier.width(8.dp))
-        Text(text = label)
-    }
-}
-
-private val RoomSortOption.label: String
-    get() =
-        when (this) {
-            RoomSortOption.PRICE_ASC -> "Precio ascendente"
-            RoomSortOption.PRICE_DESC -> "Precio descendente"
-            RoomSortOption.RATING_DESC -> "Mejor valoración"
-        }

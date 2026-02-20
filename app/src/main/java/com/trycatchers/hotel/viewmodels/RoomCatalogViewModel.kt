@@ -37,7 +37,7 @@ data class RoomCatalogUiState(
     val needsExtraBed: Boolean = false,
     val needsCrib: Boolean = false,
     val onlyOffers: Boolean = false,
-    val priceRange: ClosedFloatingPointRange<Float> = 0f..1000f,
+    val priceRange: ClosedFloatingPointRange<Float> = 0f..500f,
     val sortOption: RoomFinderViewModel.RoomSortOption = RoomFinderViewModel.RoomSortOption.PRICE_ASC,
     val onlyWithExtras: Boolean = false,
     val onlyWithImages: Boolean = false,

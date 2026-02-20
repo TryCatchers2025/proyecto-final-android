@@ -15,6 +15,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.trycatchers.hotel.compose.components.filters.RoomFilterToggle
+import com.trycatchers.hotel.compose.components.filters.RoomPriceRangeSection
 import com.trycatchers.hotel.compose.components.ui.DatePickerRange
 import com.trycatchers.hotel.compose.components.ui.DropDown
 import com.trycatchers.hotel.viewmodels.RoomFinderViewModel
@@ -26,14 +28,7 @@ fun RoomFinderScreen(
     onNavigateToSelector: () -> Unit,
     viewModel: RoomFinderViewModel = hiltViewModel()
 ) {
-    val canSearch by viewModel.canSearch.collectAsState()
-    val dates by viewModel.dates.collectAsState()
-    val occupants by viewModel.occupants.collectAsState()
-    val isVip by viewModel.isVip.collectAsState()
-    val needsExtraBed by viewModel.needsExtraBed.collectAsState()
-    val needsCrib by viewModel.needsCrib.collectAsState()
-    val onlyOffers by viewModel.onlyOffers.collectAsState()
-    val priceRange by viewModel.priceRange.collectAsState()
+    val filtersState by viewModel.filtersUiState.collectAsState()
 
     RoomFinderView(
         onDatesChange = viewModel::setDates,
@@ -48,20 +43,20 @@ fun RoomFinderScreen(
             viewModel.searchAvailableRooms(forceRefresh = true)
             onNavigateToSelector()
         },
-        canSearch = canSearch,
-        dates = dates,
-        occupants = occupants,
-        isVip = isVip,
-        needsExtraBed = needsExtraBed,
-        needsCrib = needsCrib,
-        onlyOffers = onlyOffers,
-        priceRange = priceRange
+        canSearch = filtersState.canSearch,
+        dates = filtersState.dates,
+        occupants = filtersState.occupants,
+        isVip = filtersState.isVip,
+        needsExtraBed = filtersState.needsExtraBed,
+        needsCrib = filtersState.needsCrib,
+        onlyOffers = filtersState.onlyOffers,
+        priceRange = filtersState.priceRange,
     )
 }
 
+/** Vista de filtros de búsqueda desacoplada del ViewModel. */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-/** Vista de filtros de búsqueda desacoplada del ViewModel. */
 fun RoomFinderView(
     onDatesChange: (Pair<Long, Long>) -> Unit,
     onOccupantsChange: (Int) -> Unit,
@@ -129,61 +124,29 @@ fun RoomFinderView(
                 style = MaterialTheme.typography.titleMedium,
             )
 
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Checkbox(
-                    checked = isVip,
-                    onCheckedChange = onIsVipChange,
-                )
-                Text(text = "¿Eres VIP?")
-            }
-
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Checkbox(
-                    checked = needsExtraBed,
-                    onCheckedChange = onNeedsExtraBedChange,
-                )
-                Text(text = "Necesito una cama extra")
-            }
-
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Checkbox(
-                    checked = needsCrib,
-                    onCheckedChange = onNeedsCribChange,
-                )
-                Text(text = "Necesito una cuna")
-            }
-
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Checkbox(
-                    checked = onlyOffers,
-                    onCheckedChange = onOnlyOffersChange,
-                )
-                Text(text = "Solo ver ofertas")
-            }
+            RoomFilterToggle(label = "¿Eres VIP?", checked = isVip, onCheckedChange = onIsVipChange)
+            RoomFilterToggle(
+                label = "Necesito una cama extra",
+                checked = needsExtraBed,
+                onCheckedChange = onNeedsExtraBedChange,
+            )
+            RoomFilterToggle(
+                label = "Necesito una cuna",
+                checked = needsCrib,
+                onCheckedChange = onNeedsCribChange,
+            )
+            RoomFilterToggle(
+                label = "Solo ver ofertas",
+                checked = onlyOffers,
+                onCheckedChange = onOnlyOffersChange,
+            )
 
             HorizontalDivider()
 
-            Text(
-                text = "Rango de precios por noche",
-                style = MaterialTheme.typography.titleMedium,
+            RoomPriceRangeSection(
+                priceRange = priceRange,
+                onPriceRangeChange = onPriceRangeChange,
             )
-
-            RangeSlider(
-                value = priceRange,
-                onValueChange = onPriceRangeChange,
-                valueRange = 0f..500f,
-                steps = 100,
-                modifier = Modifier.padding(horizontal = 10.dp)
-            )
-
-            Row(
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically,
-                modifier = Modifier.fillMaxWidth().padding(horizontal = 10.dp)
-            ) {
-                Text("${priceRange.start.toInt()}€")
-                Text("${priceRange.endInclusive.toInt()}€")
-            }
 
             Spacer(modifier = Modifier.height(16.dp))
         }
@@ -224,7 +187,7 @@ fun RoomFinderPreview() {
             needsExtraBed = false,
             needsCrib = false,
             onlyOffers = false,
-            priceRange = 0f..1000f,
+            priceRange = 0f..500f,
         )
     }
 }

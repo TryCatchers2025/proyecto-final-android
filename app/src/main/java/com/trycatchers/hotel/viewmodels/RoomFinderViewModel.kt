@@ -11,9 +11,7 @@ import com.trycatchers.hotel.utils.millisToLocalDate
 import com.trycatchers.hotel.utils.toUserMessage
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import javax.inject.Inject
@@ -27,6 +25,23 @@ data class RoomSearchUiState(
     val isEmpty: Boolean
         get() = !isLoading && errorMessage == null && rooms.isEmpty()
 }
+
+/** Estado agregado de filtros para minimizar acoplamiento entre vistas y flujos internos. */
+data class RoomFinderFiltersUiState(
+    val dates: Pair<Long?, Long?> = Pair(null, null),
+    val occupants: Int = 1,
+    val isVip: Boolean = false,
+    val needsExtraBed: Boolean = false,
+    val needsCrib: Boolean = false,
+    val onlyOffers: Boolean = false,
+    val priceRange: ClosedFloatingPointRange<Float> = 0f..500f,
+    val sortOption: RoomFinderViewModel.RoomSortOption = RoomFinderViewModel.RoomSortOption.PRICE_ASC,
+    val onlyWithExtras: Boolean = false,
+    val onlyWithImages: Boolean = false,
+    val minimumRating: Float? = null,
+    val canSearch: Boolean = false,
+    val dateValidationError: String? = null,
+)
 
 private data class RoomSearchParams(
     val startDateMillis: Long,
@@ -61,7 +76,7 @@ constructor(
     }
 
     companion object {
-        private val DEFAULT_PRICE_RANGE: ClosedFloatingPointRange<Float> = 0f..1000f
+        private val DEFAULT_PRICE_RANGE: ClosedFloatingPointRange<Float> = 0f..500f
     }
 
     private val _dates: MutableStateFlow<Pair<Long?, Long?>> = MutableStateFlow(Pair(null, null))
@@ -100,6 +115,102 @@ constructor(
 
     private val _searchState = MutableStateFlow(RoomSearchUiState())
     val searchState: StateFlow<RoomSearchUiState> = _searchState.asStateFlow()
+
+    private data class PrimaryFilters(
+        val dates: Pair<Long?, Long?>,
+        val occupants: Int,
+        val isVip: Boolean,
+        val needsExtraBed: Boolean,
+        val needsCrib: Boolean,
+    )
+
+    private data class SecondaryFilters(
+        val onlyOffers: Boolean,
+        val priceRange: ClosedFloatingPointRange<Float>,
+        val sortOption: RoomSortOption,
+        val onlyWithExtras: Boolean,
+        val onlyWithImages: Boolean,
+    )
+
+    private data class ValidationFilters(
+        val minimumRating: Float?,
+        val canSearch: Boolean,
+        val dateValidationError: String?,
+    )
+
+    private val primaryFiltersFlow =
+        combine(dates, occupants, isVip, needsExtraBed, needsCrib) {
+                selectedDates,
+                selectedOccupants,
+                selectedIsVip,
+                selectedNeedsExtraBed,
+                selectedNeedsCrib,
+            ->
+            PrimaryFilters(
+                dates = selectedDates,
+                occupants = selectedOccupants,
+                isVip = selectedIsVip,
+                needsExtraBed = selectedNeedsExtraBed,
+                needsCrib = selectedNeedsCrib,
+            )
+        }
+
+    private val secondaryFiltersFlow =
+        combine(onlyOffers, priceRange, sortOption, onlyWithExtras, onlyWithImages) {
+                selectedOnlyOffers,
+                selectedPriceRange,
+                selectedSortOption,
+                selectedOnlyWithExtras,
+                selectedOnlyWithImages,
+            ->
+            SecondaryFilters(
+                onlyOffers = selectedOnlyOffers,
+                priceRange = selectedPriceRange,
+                sortOption = selectedSortOption,
+                onlyWithExtras = selectedOnlyWithExtras,
+                onlyWithImages = selectedOnlyWithImages,
+            )
+        }
+
+    private val validationFiltersFlow =
+        combine(minimumRating, canSearch, dateValidationError) {
+                selectedMinimumRating,
+                selectedCanSearch,
+                selectedDateValidationError,
+            ->
+            ValidationFilters(
+                minimumRating = selectedMinimumRating,
+                canSearch = selectedCanSearch,
+                dateValidationError = selectedDateValidationError,
+            )
+        }
+
+    val filtersUiState: StateFlow<RoomFinderFiltersUiState> =
+        combine(primaryFiltersFlow, secondaryFiltersFlow, validationFiltersFlow) {
+                primary,
+                secondary,
+                validation,
+            ->
+            RoomFinderFiltersUiState(
+                dates = primary.dates,
+                occupants = primary.occupants,
+                isVip = primary.isVip,
+                needsExtraBed = primary.needsExtraBed,
+                needsCrib = primary.needsCrib,
+                onlyOffers = secondary.onlyOffers,
+                priceRange = secondary.priceRange,
+                sortOption = secondary.sortOption,
+                onlyWithExtras = secondary.onlyWithExtras,
+                onlyWithImages = secondary.onlyWithImages,
+                minimumRating = validation.minimumRating,
+                canSearch = validation.canSearch,
+                dateValidationError = validation.dateValidationError,
+            )
+        }.stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5_000),
+            initialValue = RoomFinderFiltersUiState(),
+        )
 
     private var lastParams: RoomSearchParams? = null
 

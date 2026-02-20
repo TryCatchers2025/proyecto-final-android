@@ -29,14 +29,12 @@ fun InitialSearchScreen(
     onNavigateToFilters: () -> Unit,
     viewModel: RoomFinderViewModel = hiltViewModel()
 ) {
-    val dates by viewModel.dates.collectAsState()
-    val canProceed by viewModel.canSearch.collectAsState()
-    val validationError by viewModel.dateValidationError.collectAsState()
+    val filtersState by viewModel.filtersUiState.collectAsState()
 
     InitialSearchView(
-        dates = dates,
-        canProceed = canProceed,
-        validationError = validationError,
+        dates = filtersState.dates,
+        canProceed = filtersState.canSearch,
+        validationError = filtersState.dateValidationError,
         onDatesChange = viewModel::setDatesFromInitialScreen,
         onSearchClick = onNavigateToFilters
     )
