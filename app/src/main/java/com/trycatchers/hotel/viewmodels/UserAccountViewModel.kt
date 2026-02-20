@@ -52,7 +52,7 @@ data class UserAccountUiState(
         get() = bookings
             .filter { it.status == "active" && it.isPaid }
             .sortedBy { it.startDate }
-            .firstOrNull {
+            .lastOrNull {
                 val start = parseApiDate(it.startDate)
                 start != null && !start.isBefore(LocalDate.now())
             }
