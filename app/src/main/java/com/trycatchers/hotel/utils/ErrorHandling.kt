@@ -1,14 +1,16 @@
 package com.trycatchers.hotel.utils
 
-import java.io.IOException
 import okhttp3.ResponseBody
 import org.json.JSONObject
 import retrofit2.HttpException
+import java.io.IOException
 
 fun Throwable.toUserMessage(defaultMessage: String): String {
+    println("Error: ${this::class.java.simpleName} - ${message ?: "No message"}")
     return when (this) {
         is IOException ->
             "No se pudo conectar con el servidor. Revisa tu conexión e inténtalo nuevamente."
+
         is HttpException -> this.toHttpErrorMessage(defaultMessage)
         else -> message?.takeIf { it.isNotBlank() } ?: defaultMessage
     }

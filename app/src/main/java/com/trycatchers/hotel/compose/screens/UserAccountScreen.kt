@@ -21,7 +21,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -32,7 +31,7 @@ import com.trycatchers.hotel.viewmodels.BookingFilter
 import com.trycatchers.hotel.viewmodels.UserAccountViewModel
 import kotlinx.coroutines.launch
 import java.text.NumberFormat
-import java.util.Locale
+import java.util.*
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -45,27 +44,37 @@ fun UserAccountScreen(
     val scope = rememberCoroutineScope()
     val displayName = remember { viewModel.getUserDisplayName() }
 
+    LaunchedEffect(Unit) {
+        viewModel.loadBookings()
+    }
+
     LaunchedEffect(state.errorMessage) {
         val msg = state.errorMessage
         if (!msg.isNullOrBlank()) scope.launch { snackbarHostState.showSnackbar(msg) }
     }
 
-    Scaffold(
-        snackbarHost = { SnackbarHost(snackbarHostState) },
-        topBar = {
-            TopAppBar(
-                title = { Text("Mi cuenta") },
-                actions = {
-                    IconButton(onClick = viewModel::loadBookings) {
-                        Icon(Icons.Filled.Refresh, contentDescription = "Recargar")
-                    }
-                },
-            )
-        },
-    ) { innerPadding ->
+    Box(modifier = Modifier.fillMaxSize()) {
         Column(
-            modifier = Modifier.fillMaxSize().padding(innerPadding),
+            modifier = Modifier.fillMaxSize(),
         ) {
+            Row(
+                modifier =
+                    Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 20.dp, vertical = 8.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween,
+            ) {
+                Text(
+                    text = "Mi cuenta",
+                    style = MaterialTheme.typography.titleLarge,
+                    fontWeight = FontWeight.Bold,
+                )
+                IconButton(onClick = viewModel::loadBookings) {
+                    Icon(Icons.Filled.Refresh, contentDescription = "Recargar")
+                }
+            }
+
             UserHeader(displayName = displayName)
 
             LazyColumn(
@@ -126,6 +135,11 @@ fun UserAccountScreen(
                 }
             }
         }
+
+        SnackbarHost(
+            hostState = snackbarHostState,
+            modifier = Modifier.align(Alignment.BottomCenter)
+        )
     }
 }
 
@@ -225,7 +239,9 @@ private fun NextStayCard(booking: Booking, onClick: () -> Unit) {
                     fontWeight = FontWeight.Bold
                 )
                 Text(
-                    text = "${booking.totalNights} noches • Localizador: ${booking.bookingId?.takeLast(8)?.uppercase()}",
+                    text = "${booking.totalNights} noches • Localizador: ${
+                        booking.bookingId?.takeLast(8)?.uppercase()
+                    }",
                     style = MaterialTheme.typography.bodyMedium,
                     color = Color.White.copy(alpha = 0.9f)
                 )

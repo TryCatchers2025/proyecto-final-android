@@ -10,19 +10,13 @@ import com.trycatchers.hotel.utils.formatDisplayDate
 import com.trycatchers.hotel.utils.parseApiDate
 import com.trycatchers.hotel.utils.toUserMessage
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.launch
 import java.text.NumberFormat
 import java.time.LocalDate
-import java.util.Locale
+import java.util.*
 import javax.inject.Inject
 import kotlin.math.max
-import kotlinx.coroutines.flow.MutableSharedFlow
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.SharedFlow
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asSharedFlow
-import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.update
-import kotlinx.coroutines.launch
 
 /** Representa el estado de la pantalla de pago de la reserva. */
 data class BookingPaymentUiState(

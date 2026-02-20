@@ -12,32 +12,26 @@ import com.trycatchers.hotel.utils.formatDisplayDate
 import com.trycatchers.hotel.utils.millisToLocalDate
 import com.trycatchers.hotel.utils.toUserMessage
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.launch
 import java.text.NumberFormat
 import java.time.LocalDate
 import java.time.temporal.ChronoUnit
-import java.util.Locale
+import java.util.*
 import javax.inject.Inject
 import kotlin.math.max
-import kotlinx.coroutines.flow.MutableSharedFlow
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.SharedFlow
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asSharedFlow
-import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.update
-import kotlinx.coroutines.launch
 
 data class BookingSummaryUiState(
-        val isLoading: Boolean = true,
-        val isCreatingBooking: Boolean = false,
-        val room: Room? = null,
-        val occupants: Int = 0,
-        val nights: Int = 0,
-        val pricePerNight: Double = 0.0,
-        val totalPrice: Double = 0.0,
-        val startDateLabel: String = "",
-        val endDateLabel: String = "",
-        val errorMessage: String? = null,
+    val isLoading: Boolean = true,
+    val isCreatingBooking: Boolean = false,
+    val room: Room? = null,
+    val occupants: Int = 0,
+    val nights: Int = 0,
+    val pricePerNight: Double = 0.0,
+    val totalPrice: Double = 0.0,
+    val startDateLabel: String = "",
+    val endDateLabel: String = "",
+    val errorMessage: String? = null,
 ) {
     val formattedPricePerNight: String
         get() = formatCurrency(pricePerNight)
@@ -47,7 +41,7 @@ data class BookingSummaryUiState(
 
     companion object {
         private fun formatCurrency(value: Double): String =
-                NumberFormat.getCurrencyInstance(Locale("es", "ES")).format(value)
+            NumberFormat.getCurrencyInstance(Locale("es", "ES")).format(value)
     }
 }
 
@@ -70,9 +64,9 @@ sealed interface BookingSummaryEvent {
 class BookingSummaryViewModel
 @Inject
 constructor(
-        private val roomRepository: RoomRepository,
-        private val bookingRepository: BookingRepository,
-        savedStateHandle: SavedStateHandle,
+    private val roomRepository: RoomRepository,
+    private val bookingRepository: BookingRepository,
+    savedStateHandle: SavedStateHandle,
 ) : ViewModel() {
 
     private val roomId: String = savedStateHandle.get<String>("roomId") ?: ""
@@ -104,29 +98,29 @@ constructor(
                 val endDate = millisToLocalDate(endDateMillis)
                 val nights = max(1, ChronoUnit.DAYS.between(startDate, endDate).toInt())
                 val pricePerNight =
-                        calculateNightlyRate(room.pricePerNight, room.offerPercentage ?: 0.0)
+                    calculateNightlyRate(room.pricePerNight, room.offerPercentage ?: 0.0)
                 val totalPrice = pricePerNight * nights
 
                 _uiState.update {
                     it.copy(
-                            isLoading = false,
-                            room = room,
-                            nights = nights,
-                            pricePerNight = pricePerNight,
-                            totalPrice = totalPrice,
-                            startDateLabel = formatDisplayDate(startDate),
-                            endDateLabel = formatDisplayDate(endDate),
+                        isLoading = false,
+                        room = room,
+                        nights = nights,
+                        pricePerNight = pricePerNight,
+                        totalPrice = totalPrice,
+                        startDateLabel = formatDisplayDate(startDate),
+                        endDateLabel = formatDisplayDate(endDate),
                     )
                 }
             } catch (error: Exception) {
                 _uiState.update {
                     it.copy(
-                            isLoading = false,
-                            errorMessage =
-                                error.toUserMessage(
-                                    defaultMessage =
-                                        "No se pudo cargar la información de la habitación"
-                                )
+                        isLoading = false,
+                        errorMessage =
+                            error.toUserMessage(
+                                defaultMessage =
+                                    "No se pudo cargar la información de la habitación"
+                            )
                     )
                 }
             }
@@ -202,12 +196,12 @@ constructor(
             } catch (error: Exception) {
                 _uiState.update {
                     it.copy(
-                            isCreatingBooking = false,
-                            errorMessage =
-                                error.toUserMessage(
-                                    defaultMessage =
-                                        "No se pudo crear la reserva. Inténtalo de nuevo"
-                                )
+                        isCreatingBooking = false,
+                        errorMessage =
+                            error.toUserMessage(
+                                defaultMessage =
+                                    "No se pudo crear la reserva. Inténtalo de nuevo"
+                            )
                     )
                 }
             }
@@ -229,10 +223,10 @@ constructor(
      */
     private fun buildCreateBookingRequest(): CreateBookingRequest {
         return CreateBookingRequest(
-                roomId = roomId,
-                startDate = formatApiDate(startDateMillis),
-                endDate = formatApiDate(endDateMillis),
-                occupants = occupants,
+            roomId = roomId,
+            startDate = formatApiDate(startDateMillis),
+            endDate = formatApiDate(endDateMillis),
+            occupants = occupants,
         )
     }
 

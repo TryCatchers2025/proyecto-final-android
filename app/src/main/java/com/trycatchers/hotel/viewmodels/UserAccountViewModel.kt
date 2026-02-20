@@ -9,15 +9,15 @@ import com.trycatchers.hotel.data.repositories.SessionRepository
 import com.trycatchers.hotel.utils.parseApiDate
 import com.trycatchers.hotel.utils.toUserMessage
 import dagger.hilt.android.lifecycle.HiltViewModel
-import java.nio.charset.StandardCharsets
-import java.time.LocalDate
-import javax.inject.Inject
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import org.json.JSONObject
+import java.nio.charset.StandardCharsets
+import java.time.LocalDate
+import javax.inject.Inject
 
 /** Estado de la pantalla de cuenta de usuario. */
 data class UserAccountUiState(
@@ -32,10 +32,13 @@ data class UserAccountUiState(
                 BookingFilter.ALL -> bookings
                 BookingFilter.ACTIVE ->
                     bookings.filter { it.status == "active" && !it.isPaid }
+
                 BookingFilter.PAID ->
                     bookings.filter { it.isPaid }
+
                 BookingFilter.CANCELED ->
                     bookings.filter { it.status == "canceled" }
+
                 BookingFilter.PAST -> {
                     val today = LocalDate.now()
                     bookings.filter { b ->
@@ -47,7 +50,7 @@ data class UserAccountUiState(
 
     val nextBooking: Booking?
         get() = bookings
-            .filter { it.status == "active" }
+            .filter { it.status == "active" && it.isPaid }
             .sortedBy { it.startDate }
             .firstOrNull {
                 val start = parseApiDate(it.startDate)

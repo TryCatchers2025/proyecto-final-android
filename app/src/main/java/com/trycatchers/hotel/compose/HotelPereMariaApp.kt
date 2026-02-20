@@ -4,7 +4,6 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
@@ -16,15 +15,7 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.trycatchers.hotel.compose.components.navigation.BottomBar
 import com.trycatchers.hotel.compose.components.navigation.TopBar
-import com.trycatchers.hotel.compose.screens.BookingDetailScreen
-import com.trycatchers.hotel.compose.screens.BookingPaymentScreen
-import com.trycatchers.hotel.compose.screens.BookingSummaryScreen
-import com.trycatchers.hotel.compose.screens.InitialSearchScreen
-import com.trycatchers.hotel.compose.screens.RoomCatalogScreen
-import com.trycatchers.hotel.compose.screens.RoomDetailsScreen
-import com.trycatchers.hotel.compose.screens.RoomFinderScreen
-import com.trycatchers.hotel.compose.screens.RoomSelectorScreen
-import com.trycatchers.hotel.compose.screens.UserAccountScreen
+import com.trycatchers.hotel.compose.screens.*
 import com.trycatchers.hotel.viewmodels.RoomFinderViewModel
 
 /**
@@ -48,38 +39,37 @@ fun HotelPereMariaApp(onThemeToggle: () -> Unit) {
         val destination = route ?: screen.route
         navController.navigate(destination) {
             if (popToRoot) {
-                popUpTo(navController.graph.startDestinationId) { saveState = true }
-                restoreState = true
+                popUpTo(Screen.InitialSearch.route) { inclusive = false }
             }
             launchSingleTop = true
         }
     }
 
     Scaffold(
-            modifier = Modifier.fillMaxSize(),
-            topBar = {
-                if (showTopBar) {
-                    TopBar(
-                            navigateTo = { screen, route ->
-                                navigateTo(screen, route, popToRoot = false)
-                            },
-                            onThemeToggle = onThemeToggle
-                    )
-                }
-            },
-            bottomBar = {
-                if (showBottomBar) {
-                    BottomBar(
-                            navigateTo = { screen -> navigateTo(screen, popToRoot = true) },
-                            currentRoute = currentRoute
-                    )
-                }
+        modifier = Modifier.fillMaxSize(),
+        topBar = {
+            if (showTopBar) {
+                TopBar(
+                    navigateTo = { screen, route ->
+                        navigateTo(screen, route, popToRoot = false)
+                    },
+                    onThemeToggle = onThemeToggle
+                )
             }
+        },
+        bottomBar = {
+            if (showBottomBar) {
+                BottomBar(
+                    navigateTo = { screen -> navigateTo(screen, popToRoot = true) },
+                    currentRoute = currentRoute
+                )
+            }
+        }
     ) { innerPadding ->
         HotelPereMariaNavHost(
-                navController = navController,
-                modifier = Modifier.padding(innerPadding),
-                navigateTo = ::navigateTo
+            navController = navController,
+            modifier = Modifier.padding(innerPadding),
+            navigateTo = ::navigateTo
         )
     }
 }
@@ -87,164 +77,153 @@ fun HotelPereMariaApp(onThemeToggle: () -> Unit) {
 /** NavHost que registra todas las rutas de la aplicación. */
 @Composable
 fun HotelPereMariaNavHost(
-        navController: NavHostController,
-        modifier: Modifier,
-        navigateTo: (Screen, String?, Boolean) -> Unit,
+    navController: NavHostController,
+    modifier: Modifier,
+    navigateTo: (Screen, String?, Boolean) -> Unit,
 ) {
+    fun navigateToUserAccountFromBookingFlow() {
+        navController.navigate(Screen.UserAccount.route) {
+            popUpTo(Screen.InitialSearch.route) { inclusive = false }
+            launchSingleTop = true
+        }
+    }
+
     NavHost(
-            navController = navController,
-            startDestination = Screen.InitialSearch.route,
-            modifier = modifier
+        navController = navController,
+        startDestination = Screen.InitialSearch.route,
+        modifier = modifier
     ) {
         composable(route = Screen.InitialSearch.route) { backStackEntry ->
             val sharedRoomFinderViewModel: RoomFinderViewModel = hiltViewModel(backStackEntry)
 
             InitialSearchScreen(
-                    onNavigateToFilters = {
-                        navController.navigate(Screen.RoomFinder.route) { launchSingleTop = true }
-                    },
-                    viewModel = sharedRoomFinderViewModel
+                onNavigateToFilters = {
+                    navController.navigate(Screen.RoomFinder.route) { launchSingleTop = true }
+                },
+                viewModel = sharedRoomFinderViewModel
             )
         }
 
         composable(route = Screen.RoomFinder.route) { backStackEntry ->
             val parentEntry =
-                    remember(backStackEntry) {
-                        navController.getBackStackEntry(Screen.InitialSearch.route)
-                    }
+                remember(backStackEntry) {
+                    navController.getBackStackEntry(Screen.InitialSearch.route)
+                }
             val sharedRoomFinderViewModel: RoomFinderViewModel = hiltViewModel(parentEntry)
 
             RoomFinderScreen(
-                    onNavigateBack = {
-                        sharedRoomFinderViewModel.reset()
-                        navController.popBackStack()
-                    },
-                    onNavigateToSelector = {
-                        navController.navigate(Screen.RoomSelector.route) { launchSingleTop = true }
-                    },
-                    viewModel = sharedRoomFinderViewModel
+                onNavigateBack = {
+                    sharedRoomFinderViewModel.reset()
+                    navController.popBackStack()
+                },
+                onNavigateToSelector = {
+                    navController.navigate(Screen.RoomSelector.route) { launchSingleTop = true }
+                },
+                viewModel = sharedRoomFinderViewModel
             )
         }
 
         composable(route = Screen.RoomSelector.route) { backStackEntry ->
             val parentEntry =
-                    remember(backStackEntry) {
-                        navController.getBackStackEntry(Screen.InitialSearch.route)
-                    }
+                remember(backStackEntry) {
+                    navController.getBackStackEntry(Screen.InitialSearch.route)
+                }
             val sharedRoomFinderViewModel: RoomFinderViewModel = hiltViewModel(parentEntry)
 
             RoomSelectorScreen(
-                    onNavigateBack = { navController.popBackStack() },
-                    navigateToRoomDetails = { roomId ->
-                        navigateTo(
-                                Screen.RoomDetails,
-                                Screen.RoomDetails.createRoute(roomId),
-                                false
+                onNavigateBack = { navController.popBackStack() },
+                navigateToRoomDetails = { roomId ->
+                    navigateTo(
+                        Screen.RoomDetails,
+                        Screen.RoomDetails.createRoute(roomId),
+                        false
+                    )
+                },
+                navigateToBookingSummary = { roomId, start, end, occupants ->
+                    val route =
+                        Screen.BookingSummary.createRoute(
+                            roomId = roomId,
+                            startDateMillis = start,
+                            endDateMillis = end,
+                            occupants = occupants
                         )
-                    },
-                    navigateToBookingSummary = { roomId, start, end, occupants ->
-                        val route =
-                                Screen.BookingSummary.createRoute(
-                                        roomId = roomId,
-                                        startDateMillis = start,
-                                        endDateMillis = end,
-                                        occupants = occupants
-                                )
-                        navController.navigate(route)
-                    },
-                    viewModel = sharedRoomFinderViewModel
+                    navController.navigate(route)
+                },
+                viewModel = sharedRoomFinderViewModel
             )
         }
 
         composable(route = Screen.RoomCatalog.route) {
             RoomCatalogScreen(
-                    navigateToRoomDetails = { roomId ->
-                        navigateTo(
-                                Screen.RoomDetails,
-                                Screen.RoomDetails.createRoute(roomId),
-                                false
-                        )
-                    }
+                navigateToRoomDetails = { roomId ->
+                    navigateTo(
+                        Screen.RoomDetails,
+                        Screen.RoomDetails.createRoute(roomId),
+                        false
+                    )
+                }
             )
         }
 
         composable(route = Screen.UserAccount.route) {
             UserAccountScreen(
-                    onNavigateToBookingDetail = { bookingId ->
-                        navController.navigate(Screen.BookingDetail.createRoute(bookingId))
-                    }
+                onNavigateToBookingDetail = { bookingId ->
+                    navController.navigate(Screen.BookingDetail.createRoute(bookingId))
+                }
             )
         }
 
         composable(route = Screen.RoomDetails.route) { backStackEntry ->
             val parentEntry =
-                    remember(backStackEntry) {
-                        navController.getBackStackEntry(Screen.InitialSearch.route)
-                    }
+                remember(backStackEntry) {
+                    navController.getBackStackEntry(Screen.InitialSearch.route)
+                }
             val sharedRoomFinderViewModel: RoomFinderViewModel = hiltViewModel(parentEntry)
 
-            val dates by sharedRoomFinderViewModel.dates.collectAsState()
-            val occupants by sharedRoomFinderViewModel.occupants.collectAsState()
-
             RoomDetailsScreen(
-                    onNavigateBack = { navController.popBackStack() },
-                    onBookRoom = { roomId ->
-                        val start = dates.first
-                        val end = dates.second
-                        if (start != null && end != null) {
-                            val route =
-                                    Screen.BookingSummary.createRoute(
-                                            roomId = roomId,
-                                            startDateMillis = start,
-                                            endDateMillis = end,
-                                            occupants = occupants
-                                    )
-                            navController.navigate(route)
-                        } else {
-                            // Si no hay fechas, enviarlo a buscar pero intentando mantener el
-                            // roomId?
-                            // Por ahora lo mandamos al buscador inicial.
-                            navController.navigate(Screen.InitialSearch.route) {
-                                popUpTo(Screen.InitialSearch.route) { inclusive = true }
-                            }
-                        }
+                onNavigateBack = { navController.popBackStack() },
+                onBookRoom = {
+                    sharedRoomFinderViewModel.reset()
+                    navController.navigate(Screen.InitialSearch.route) {
+                        popUpTo(Screen.InitialSearch.route) { inclusive = true }
                     }
+                }
             )
         }
 
         composable(route = Screen.BookingSummary.route) { backStackEntry ->
             val parentEntry =
-                    remember(backStackEntry) {
-                        navController.getBackStackEntry(Screen.InitialSearch.route)
-                    }
+                remember(backStackEntry) {
+                    navController.getBackStackEntry(Screen.InitialSearch.route)
+                }
             val sharedRoomFinderViewModel: RoomFinderViewModel = hiltViewModel(parentEntry)
 
             BookingSummaryScreen(
-                    onNavigateBack = { navController.popBackStack() },
-                    onNavigateToPayment = { bookingId ->
-                        sharedRoomFinderViewModel.reset()
-                        navController.navigate(Screen.BookingPayment.createRoute(bookingId))
-                    }
+                onNavigateBack = { navController.popBackStack() },
+                onNavigateToPayment = { bookingId ->
+                    sharedRoomFinderViewModel.reset()
+                    navController.navigate(Screen.BookingPayment.createRoute(bookingId))
+                },
+                onNavigateToUserAccount = {
+                    sharedRoomFinderViewModel.reset()
+                    navigateToUserAccountFromBookingFlow()
+                }
             )
         }
 
         composable(route = Screen.BookingPayment.route) {
             BookingPaymentScreen(
-                    onNavigateBack = { navController.popBackStack() },
-                    onFinish = {
-                        // After payment, go to booking detail so the user can see the updated
-                        // status
-                        navController.popBackStack()
-                    }
+                onNavigateBack = { navigateToUserAccountFromBookingFlow() },
+                onFinish = { navigateToUserAccountFromBookingFlow() }
             )
         }
 
         composable(route = Screen.BookingDetail.route) {
             BookingDetailScreen(
-                    onNavigateBack = { navController.popBackStack() },
-                    onNavigateToPayment = { bookingId ->
-                        navController.navigate(Screen.BookingPayment.createRoute(bookingId))
-                    }
+                onNavigateBack = { navigateToUserAccountFromBookingFlow() },
+                onNavigateToPayment = { bookingId ->
+                    navController.navigate(Screen.BookingPayment.createRoute(bookingId))
+                }
             )
         }
     }

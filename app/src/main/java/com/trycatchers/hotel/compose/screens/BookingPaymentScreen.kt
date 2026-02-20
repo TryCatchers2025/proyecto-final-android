@@ -1,45 +1,14 @@
 package com.trycatchers.hotel.compose.screens
 
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.Button
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.HorizontalDivider
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.SnackbarHost
-import androidx.compose.material3.SnackbarHostState
-import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
@@ -58,9 +27,9 @@ import kotlinx.coroutines.launch
 /** Pantalla de pago de reserva con resumen, simulación de confirmación y resultado final. */
 @Composable
 fun BookingPaymentScreen(
-        onNavigateBack: () -> Unit,
-        onFinish: () -> Unit,
-        viewModel: BookingPaymentViewModel = hiltViewModel()
+    onNavigateBack: () -> Unit,
+    onFinish: () -> Unit,
+    viewModel: BookingPaymentViewModel = hiltViewModel()
 ) {
     val state by viewModel.uiState.collectAsState()
     val snackbarHostState = remember { SnackbarHostState() }
@@ -85,22 +54,22 @@ fun BookingPaymentScreen(
 
     if (showPaymentDialog) {
         SimulatedPaymentDialog(
-                amount = state.formattedTotalPrice,
-                onDismiss = { showPaymentDialog = false },
-                onConfirm = {
-                    showPaymentDialog = false
-                    viewModel.confirmPayment()
-                }
+            amount = state.formattedTotalPrice,
+            onDismiss = { showPaymentDialog = false },
+            onConfirm = {
+                showPaymentDialog = false
+                viewModel.confirmPayment()
+            }
         )
     }
 
     if (showSuccessDialog) {
         PaymentSuccessDialog(
-                onDismiss = {
-                    showSuccessDialog = false
-                    viewModel.reset()
-                    onFinish()
-                }
+            onDismiss = {
+                showSuccessDialog = false
+                viewModel.reset()
+                onFinish()
+            }
         )
     }
 
@@ -108,15 +77,15 @@ fun BookingPaymentScreen(
         when {
             state.isLoading -> BookingPaymentLoading(modifier = Modifier.padding(innerPadding))
             else ->
-                    BookingPaymentContent(
-                            state = state,
-                            onNavigateBack = onNavigateBack,
-                            onReload = viewModel::loadPaymentSummary,
-                            onPay = {
-                                if (!state.isPaid && !state.isPaying) showPaymentDialog = true
-                            },
-                            modifier = Modifier.padding(innerPadding)
-                    )
+                BookingPaymentContent(
+                    state = state,
+                    onNavigateBack = onNavigateBack,
+                    onReload = viewModel::loadPaymentSummary,
+                    onPay = {
+                        if (!state.isPaid && !state.isPaying) showPaymentDialog = true
+                    },
+                    modifier = Modifier.padding(innerPadding)
+                )
         }
     }
 }
@@ -130,18 +99,18 @@ private fun BookingPaymentLoading(modifier: Modifier = Modifier) {
 
 @Composable
 private fun BookingPaymentContent(
-        state: BookingPaymentUiState,
-        onNavigateBack: () -> Unit,
-        onReload: () -> Unit,
-        onPay: () -> Unit,
-        modifier: Modifier = Modifier,
+    state: BookingPaymentUiState,
+    onNavigateBack: () -> Unit,
+    onReload: () -> Unit,
+    onPay: () -> Unit,
+    modifier: Modifier = Modifier,
 ) {
     Column(
-            modifier =
-                    modifier.fillMaxSize()
-                            .verticalScroll(rememberScrollState())
-                            .padding(horizontal = 20.dp, vertical = 16.dp),
-            verticalArrangement = Arrangement.spacedBy(20.dp)
+        modifier =
+            modifier.fillMaxSize()
+                .verticalScroll(rememberScrollState())
+                .padding(horizontal = 20.dp, vertical = 0.dp),
+        verticalArrangement = Arrangement.spacedBy(20.dp)
     ) {
         BookingScreenHeader(title = "Pago de la reserva", onNavigateBack = onNavigateBack)
 
@@ -149,16 +118,16 @@ private fun BookingPaymentContent(
             BookingPaymentRoomCard(state)
         } else {
             val message =
-                    state.errorMessage ?: "No pudimos cargar la habitación asociada a esta reserva."
+                state.errorMessage ?: "No pudimos cargar la habitación asociada a esta reserva."
             BookingErrorCard(message = message, actionLabel = "Reintentar", onAction = onReload)
         }
 
         BookingPaymentSummary(state)
 
         Button(
-                onClick = onPay,
-                enabled = !state.isPaid && !state.isPaying,
-                modifier = Modifier.fillMaxWidth()
+            onClick = onPay,
+            enabled = !state.isPaid && !state.isPaying,
+            modifier = Modifier.fillMaxWidth()
         ) {
             when {
                 state.isPaying -> {
@@ -166,16 +135,17 @@ private fun BookingPaymentContent(
                     Spacer(modifier = Modifier.width(12.dp))
                     Text(text = "Procesando pago...")
                 }
+
                 state.isPaid -> Text(text = "Reserva pagada")
                 else -> Text(text = "Confirmar pago")
             }
         }
 
         Text(
-                text = "Estado: ${state.paymentStatusLabel}",
-                style = MaterialTheme.typography.bodyMedium,
-                modifier = Modifier.fillMaxWidth(),
-                textAlign = TextAlign.Center
+            text = "Estado: ${state.paymentStatusLabel}",
+            style = MaterialTheme.typography.bodyMedium,
+            modifier = Modifier.fillMaxWidth(),
+            textAlign = TextAlign.Center
         )
     }
 }
@@ -187,10 +157,10 @@ private fun BookingPaymentHeader(onNavigateBack: () -> Unit) {
             Icon(imageVector = Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Volver")
         }
         Text(
-                text = "Pago de la reserva",
-                style = MaterialTheme.typography.titleMedium,
-                modifier = Modifier.weight(1f),
-                textAlign = TextAlign.Center
+            text = "Pago de la reserva",
+            style = MaterialTheme.typography.titleMedium,
+            modifier = Modifier.weight(1f),
+            textAlign = TextAlign.Center
         )
         Spacer(modifier = Modifier.width(48.dp))
     }
@@ -199,20 +169,20 @@ private fun BookingPaymentHeader(onNavigateBack: () -> Unit) {
 @Composable
 private fun BookingPaymentRoomCard(state: BookingPaymentUiState) {
     Card(
-            shape = RoundedCornerShape(20.dp),
-            elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
+        shape = RoundedCornerShape(20.dp),
+        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
     ) {
         Column(modifier = Modifier.fillMaxWidth().padding(16.dp)) {
             Text(
-                    text = state.room?.name?.ifBlank { "Habitación" } ?: "Habitación",
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.SemiBold
+                text = state.room?.name?.ifBlank { "Habitación" } ?: "Habitación",
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.SemiBold
             )
             Spacer(modifier = Modifier.height(4.dp))
             Text(
-                    text = state.room?.type.orEmpty(),
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                text = state.room?.type.orEmpty(),
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
             )
             Spacer(modifier = Modifier.height(12.dp))
             BookingDetailRow(label = "Check-in", value = state.checkInLabel)
@@ -228,17 +198,17 @@ private fun BookingPaymentSummary(state: BookingPaymentUiState) {
     Card(shape = RoundedCornerShape(16.dp)) {
         Column(modifier = Modifier.fillMaxWidth().padding(16.dp)) {
             Text(
-                    text = "Resumen de pago",
-                    style = MaterialTheme.typography.titleSmall,
-                    fontWeight = FontWeight.SemiBold
+                text = "Resumen de pago",
+                style = MaterialTheme.typography.titleSmall,
+                fontWeight = FontWeight.SemiBold
             )
             Spacer(modifier = Modifier.height(12.dp))
             BookingDetailRow(label = "Importe total", value = state.formattedTotalPrice)
             HorizontalDivider(modifier = Modifier.padding(vertical = 12.dp))
             Text(
-                    text = "Se procesará el pago utilizando una pasarela simulada.",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                text = "Se procesará el pago utilizando una pasarela simulada.",
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
             )
         }
     }
@@ -246,59 +216,59 @@ private fun BookingPaymentSummary(state: BookingPaymentUiState) {
 
 @Composable
 private fun SimulatedPaymentDialog(
-        amount: String,
-        onDismiss: () -> Unit,
-        onConfirm: () -> Unit,
+    amount: String,
+    onDismiss: () -> Unit,
+    onConfirm: () -> Unit,
 ) {
     val cardNumber = rememberSaveable { mutableStateOf("**** **** **** 4242") }
     val holderName = rememberSaveable { mutableStateOf("Nombre Apellido") }
     val cvv = rememberSaveable { mutableStateOf("123") }
 
     AlertDialog(
-            onDismissRequest = onDismiss,
-            title = { Text(text = "Simular pago") },
-            text = {
-                Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                    Text(
-                            text = "Introduce datos ficticios para completar el pago de $amount.",
-                            style = MaterialTheme.typography.bodyMedium
-                    )
-                    OutlinedTextField(
-                            value = cardNumber.value,
-                            onValueChange = { cardNumber.value = it },
-                            label = { Text(text = "Número de tarjeta") }
-                    )
-                    OutlinedTextField(
-                            value = holderName.value,
-                            onValueChange = { holderName.value = it },
-                            label = { Text(text = "Titular") }
-                    )
-                    OutlinedTextField(
-                            value = cvv.value,
-                            onValueChange = { cvv.value = it },
-                            label = { Text(text = "CVV") },
-                            visualTransformation = PasswordVisualTransformation()
-                    )
-                }
-            },
-            confirmButton = { TextButton(onClick = onConfirm) { Text(text = "Pagar ahora") } },
-            dismissButton = { TextButton(onClick = onDismiss) { Text(text = "Cancelar") } }
+        onDismissRequest = onDismiss,
+        title = { Text(text = "Simular pago") },
+        text = {
+            Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                Text(
+                    text = "Introduce datos ficticios para completar el pago de $amount.",
+                    style = MaterialTheme.typography.bodyMedium
+                )
+                OutlinedTextField(
+                    value = cardNumber.value,
+                    onValueChange = { cardNumber.value = it },
+                    label = { Text(text = "Número de tarjeta") }
+                )
+                OutlinedTextField(
+                    value = holderName.value,
+                    onValueChange = { holderName.value = it },
+                    label = { Text(text = "Titular") }
+                )
+                OutlinedTextField(
+                    value = cvv.value,
+                    onValueChange = { cvv.value = it },
+                    label = { Text(text = "CVV") },
+                    visualTransformation = PasswordVisualTransformation()
+                )
+            }
+        },
+        confirmButton = { TextButton(onClick = onConfirm) { Text(text = "Pagar ahora") } },
+        dismissButton = { TextButton(onClick = onDismiss) { Text(text = "Cancelar") } }
     )
 }
 
 @Composable
 private fun PaymentSuccessDialog(onDismiss: () -> Unit) {
     AlertDialog(
-            onDismissRequest = onDismiss,
-            title = { Text(text = "Pago completado") },
-            text = {
-                Text(
-                        text =
-                                "Tu pago se procesó correctamente. Te enviaremos la confirmación " +
-                                        "al correo asociado a tu cuenta.",
-                        style = MaterialTheme.typography.bodyMedium
-                )
-            },
-            confirmButton = { TextButton(onClick = onDismiss) { Text(text = "Aceptar") } }
+        onDismissRequest = onDismiss,
+        title = { Text(text = "Pago completado") },
+        text = {
+            Text(
+                text =
+                    "Tu pago se procesó correctamente. Te enviaremos la confirmación " +
+                            "al correo asociado a tu cuenta.",
+                style = MaterialTheme.typography.bodyMedium
+            )
+        },
+        confirmButton = { TextButton(onClick = onDismiss) { Text(text = "Aceptar") } }
     )
 }

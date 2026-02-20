@@ -14,19 +14,13 @@ import com.trycatchers.hotel.utils.formatDisplayDate
 import com.trycatchers.hotel.utils.parseApiDate
 import com.trycatchers.hotel.utils.toUserMessage
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.launch
 import java.text.NumberFormat
 import java.time.LocalDate
-import java.util.Locale
+import java.util.*
 import javax.inject.Inject
 import kotlin.math.max
-import kotlinx.coroutines.flow.MutableSharedFlow
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.SharedFlow
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asSharedFlow
-import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.update
-import kotlinx.coroutines.launch
 
 /** Estado de la pantalla de detalle de reserva. */
 data class BookingDetailUiState(
@@ -43,8 +37,12 @@ data class BookingDetailUiState(
     val errorMessage: String? = null,
     // Extend dialog state
     val showExtendDialog: Boolean = false,
+    val extendInitialDateMillis: Long? = null,
     val extendEndDateMillis: Long? = null,
     val extendError: String? = null,
+    val showExtendPaymentDialog: Boolean = false,
+    val pendingExtendEndDateMillis: Long? = null,
+    val pendingExtendAdditionalPrice: Double = 0.0,
     // Review dialog state
     val showReviewDialog: Boolean = false,
     val reviewRate: Double = 5.0,
@@ -64,13 +62,13 @@ data class BookingDetailUiState(
     val isPaid: Boolean
         get() = booking?.isPaid == true
 
-    /** La reserva puede cancelarse si está activa y no pagada. */
+    /** La reserva puede cancelarse si no está ya cancelada. */
     val canCancel: Boolean
-        get() = !isCanceled && !isPaid
-
-    /** La reserva puede extenderse si está activa. */
-    val canExtend: Boolean
         get() = !isCanceled
+
+    /** La reserva puede extenderse si está activa y pagada. */
+    val canExtend: Boolean
+        get() = !isCanceled && isPaid
 
     /** La reserva puede pagarse si está activa y no pagada. */
     val canPay: Boolean
@@ -86,12 +84,19 @@ data class BookingDetailUiState(
 
     val hasReview: Boolean
         get() = review != null
+
+    val formattedPendingExtendAdditionalPrice: String
+        get() =
+            NumberFormat.getCurrencyInstance(Locale("es", "ES"))
+                .format(pendingExtendAdditionalPrice)
 }
 
 /** Eventos de navegación emitidos por [BookingDetailViewModel]. */
 sealed interface BookingDetailEvent {
     data object NavigateToPayment : BookingDetailEvent
-    data object BookingCanceled : BookingDetailEvent
+    data class BookingCanceled(val wasPaid: Boolean, val refundAmount: String) : BookingDetailEvent
+    data object ExtendPaymentCanceled : BookingDetailEvent
+    data object ExtendPaymentCompleted : BookingDetailEvent
 }
 
 /**
@@ -170,7 +175,14 @@ constructor(
             try {
                 val updated = bookingRepository.cancel(bookingId)
                 _uiState.update { it.copy(isCanceling = false, booking = updated) }
-                _events.emit(BookingDetailEvent.BookingCanceled)
+                val refundAmount =
+                    NumberFormat.getCurrencyInstance(Locale("es", "ES")).format(updated.totalPrice)
+                _events.emit(
+                    BookingDetailEvent.BookingCanceled(
+                        wasPaid = updated.isPaid,
+                        refundAmount = refundAmount,
+                    )
+                )
             } catch (error: Exception) {
                 _uiState.update {
                     it.copy(
@@ -184,15 +196,31 @@ constructor(
 
     // ── Extend ──────────────────────────────────────────────────────────────
 
-    /** Abre el diálogo de extensión. */
+    /** Abre el diálogo de extensión, preseleccionando la fecha actual de fin. */
     fun openExtendDialog() {
-        _uiState.update { it.copy(showExtendDialog = true, extendError = null) }
+        val endDate = parseApiDate(_uiState.value.booking?.endDate)
+        val initialMillis = endDate?.let { date ->
+            val instant = date.atStartOfDay(java.time.ZoneId.systemDefault()).toInstant()
+            instant.toEpochMilli()
+        }
+        _uiState.update {
+            it.copy(
+                showExtendDialog = true,
+                extendError = null,
+                extendInitialDateMillis = initialMillis,
+            )
+        }
     }
 
     /** Cierra el diálogo de extensión. */
     fun dismissExtendDialog() {
         _uiState.update {
-            it.copy(showExtendDialog = false, extendEndDateMillis = null, extendError = null)
+            it.copy(
+                showExtendDialog = false,
+                extendInitialDateMillis = null,
+                extendEndDateMillis = null,
+                extendError = null
+            )
         }
     }
 
@@ -220,28 +248,81 @@ constructor(
             return
         }
 
+        val additionalNights =
+            if (currentEndDate != null) {
+                java.time.temporal.ChronoUnit.DAYS.between(currentEndDate, newEndDate).toInt()
+            } else {
+                0
+            }
+        val additionalPrice = additionalNights * (_uiState.value.booking?.pricePerNight ?: 0.0)
+
+        _uiState.update {
+            it.copy(
+                showExtendDialog = false,
+                extendError = null,
+                showExtendPaymentDialog = true,
+                pendingExtendEndDateMillis = millis,
+                pendingExtendAdditionalPrice = additionalPrice,
+            )
+        }
+    }
+
+    /** Cancela la simulación de pago de la extensión. */
+    fun cancelExtendPayment() {
+        viewModelScope.launch {
+            _uiState.update {
+                it.copy(
+                    showExtendPaymentDialog = false,
+                    pendingExtendEndDateMillis = null,
+                    pendingExtendAdditionalPrice = 0.0,
+                )
+            }
+            _events.emit(BookingDetailEvent.ExtendPaymentCanceled)
+        }
+    }
+
+    /** Confirma el pago simulado y entonces envía el PUT de extensión. */
+    fun confirmExtendPayment() {
+        val millis = _uiState.value.pendingExtendEndDateMillis
+        if (millis == null || _uiState.value.isExtending) return
+
         val newEndDateStr = formatApiDate(millis)
 
         viewModelScope.launch {
-            _uiState.update { it.copy(isExtending = true, extendError = null) }
+            _uiState.update {
+                it.copy(
+                    isExtending = true,
+                    extendError = null,
+                    errorMessage = null,
+                    showExtendPaymentDialog = false,
+                )
+            }
             try {
                 val updated = bookingRepository.extend(bookingId, newEndDateStr)
                 val checkOut = parseApiDate(updated.endDate)
                 _uiState.update {
                     it.copy(
                         isExtending = false,
-                        showExtendDialog = false,
+                        extendInitialDateMillis = null,
                         extendEndDateMillis = null,
+                        pendingExtendEndDateMillis = null,
+                        pendingExtendAdditionalPrice = 0.0,
                         booking = updated,
+                        errorMessage = null,
                         checkOutLabel = checkOut?.let(::formatDisplayDate).orEmpty(),
                         nights = max(updated.totalNights, 1),
                     )
                 }
+                _events.emit(BookingDetailEvent.ExtendPaymentCompleted)
             } catch (error: Exception) {
+                val userMessage = error.toUserMessage("No se pudo extender la reserva")
                 _uiState.update {
                     it.copy(
                         isExtending = false,
-                        extendError = error.toUserMessage("No se pudo extender la reserva"),
+                        pendingExtendEndDateMillis = null,
+                        pendingExtendAdditionalPrice = 0.0,
+                        extendError = userMessage,
+                        errorMessage = userMessage,
                     )
                 }
             }
