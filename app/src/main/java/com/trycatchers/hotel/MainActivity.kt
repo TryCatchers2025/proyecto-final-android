@@ -4,44 +4,33 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.tooling.preview.Preview
-import com.trycatchers.hotel.ui.theme.HotelTheme
+import androidx.compose.foundation.isSystemInDarkTheme
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
+import com.trycatchers.hotel.compose.HotelPereMariaApp
+import com.trycatchers.hotel.ui.theme.HotelPereMariaTheme
+import dagger.hilt.android.AndroidEntryPoint
 
+/**
+ * Punto de entrada de la app Android.
+ * Inicializa Compose, configura edge-to-edge y aplica el tema dinámico de la sesión.
+ */
+@AndroidEntryPoint
 class MainActivity : ComponentActivity() {
+    /**
+     * Crea el árbol principal de UI y registra el contenedor de navegación Compose.
+     */
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContent {
-            HotelTheme {
-                Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
-                    Greeting(
-                        name = "Android",
-                        modifier = Modifier.padding(innerPadding)
-                    )
-                }
+            val isDarkTheme = isSystemInDarkTheme()
+            var darkTheme by rememberSaveable { mutableStateOf(isDarkTheme) }
+            HotelPereMariaTheme(darkTheme = darkTheme) {
+                HotelPereMariaApp(onThemeToggle = { darkTheme = !darkTheme })
             }
         }
-    }
-}
-
-@Composable
-fun Greeting(name: String, modifier: Modifier = Modifier) {
-    Text(
-        text = "Hello $name!",
-        modifier = modifier
-    )
-}
-
-@Preview(showBackground = true)
-@Composable
-fun GreetingPreview() {
-    HotelTheme {
-        Greeting("Android")
     }
 }

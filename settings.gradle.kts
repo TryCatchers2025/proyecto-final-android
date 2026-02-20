@@ -19,6 +19,6 @@ dependencyResolutionManagement {
     }
 }
 
-rootProject.name = "hotel"
+rootProject.name = "Hotel Pere Maria"
 include(":app")
  
