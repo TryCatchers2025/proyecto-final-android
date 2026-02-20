@@ -6,18 +6,18 @@ import com.trycatchers.hotel.data.dtos.RoomSearchFilters
 import com.trycatchers.hotel.data.models.Room
 import com.trycatchers.hotel.data.repositories.RoomRepository
 import com.trycatchers.hotel.data.repositories.SessionRepository
+import com.trycatchers.hotel.utils.formatApiDate
+import com.trycatchers.hotel.utils.millisToLocalDate
+import com.trycatchers.hotel.utils.toUserMessage
 import dagger.hilt.android.lifecycle.HiltViewModel
-import javax.inject.Inject
-import kotlin.math.roundToInt
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import com.trycatchers.hotel.utils.formatApiDate
-import com.trycatchers.hotel.utils.millisToLocalDate
-import com.trycatchers.hotel.utils.toUserMessage
+import javax.inject.Inject
+import kotlin.math.roundToInt
 
 data class RoomSearchUiState(
     val isLoading: Boolean = false,
@@ -43,6 +43,9 @@ private data class RoomSearchParams(
     val minimumRating: Float?,
 )
 
+/**
+ * ViewModel del flujo de búsqueda de habitaciones con estado de filtros y resultados.
+ */
 @HiltViewModel
 class RoomFinderViewModel
 @Inject
@@ -74,6 +77,8 @@ constructor(
     private val _onlyWithExtras: MutableStateFlow<Boolean> = MutableStateFlow(false)
     private val _onlyWithImages: MutableStateFlow<Boolean> = MutableStateFlow(false)
     private val _minimumRating: MutableStateFlow<Float?> = MutableStateFlow(null)
+    private val _selectedRoomId: MutableStateFlow<String?> = MutableStateFlow(null)
+    private val _dateValidationError: MutableStateFlow<String?> = MutableStateFlow(null)
 
     val dates: StateFlow<Pair<Long?, Long?>> = _dates
     val occupants: StateFlow<Int> = _occupants
@@ -86,6 +91,8 @@ constructor(
     val onlyWithExtras: StateFlow<Boolean> = _onlyWithExtras
     val onlyWithImages: StateFlow<Boolean> = _onlyWithImages
     val minimumRating: StateFlow<Float?> = _minimumRating
+    val selectedRoomId: StateFlow<String?> = _selectedRoomId.asStateFlow()
+    val dateValidationError: StateFlow<String?> = _dateValidationError.asStateFlow()
 
     private val _canSearch: MutableStateFlow<Boolean> = MutableStateFlow(false)
     val canSearch: StateFlow<Boolean>
@@ -145,7 +152,33 @@ constructor(
         _minimumRating.value = minimumRating.takeIf { it > 0f }
     }
 
+    fun setSelectedRoomId(roomId: String?) {
+        _selectedRoomId.value = roomId
+    }
+
     fun reset() {
+        // Preserve dates and selected room when resetting (only reset search filters and results)
+        val savedDates = _dates.value
+        val savedRoomId = _selectedRoomId.value
+
+        _dates.value = savedDates
+        _occupants.value = 1
+        _isVip.value = false
+        _needsExtraBed.value = false
+        _needsCrib.value = false
+        _onlyOffers.value = false
+        _priceRange.value = DEFAULT_PRICE_RANGE
+        _sortOption.value = RoomSortOption.PRICE_ASC
+        _onlyWithExtras.value = false
+        _onlyWithImages.value = false
+        _minimumRating.value = null
+        _searchState.value = RoomSearchUiState()
+        _canSearch.value = false
+        lastParams = null
+        _selectedRoomId.value = savedRoomId
+    }
+
+    fun fullReset() {
         _dates.value = Pair(null, null)
         _occupants.value = 1
         _isVip.value = false
@@ -160,16 +193,27 @@ constructor(
         _searchState.value = RoomSearchUiState()
         _canSearch.value = false
         lastParams = null
+        _selectedRoomId.value = null
     }
 
     private fun areDatesValid(startMillis: Long?, endMillis: Long?): Boolean {
-        if (startMillis == null || endMillis == null) return false
-        if (startMillis >= endMillis) return false
+        if (startMillis == null || endMillis == null) {
+            _dateValidationError.value = "Selecciona ambas fechas"
+            return false
+        }
+        if (startMillis >= endMillis) {
+            _dateValidationError.value = "La fecha de inicio debe ser anterior a la fecha de fin"
+            return false
+        }
 
         val startDate = millisToLocalDate(startMillis)
         val today = millisToLocalDate(System.currentTimeMillis())
-        if (startDate.isBefore(today)) return false
+        if (startDate.isBefore(today)) {
+            _dateValidationError.value = "La fecha de inicio no puede ser en el pasado"
+            return false
+        }
 
+        _dateValidationError.value = null
         return true
     }
 

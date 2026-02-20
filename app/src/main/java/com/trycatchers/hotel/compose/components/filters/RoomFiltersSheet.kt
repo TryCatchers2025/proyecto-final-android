@@ -1,25 +1,9 @@
 package com.trycatchers.hotel.compose.components.filters
 
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.Button
-import androidx.compose.material3.Checkbox
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.HorizontalDivider
-import androidx.compose.material3.ModalBottomSheet
-import androidx.compose.material3.RadioButton
-import androidx.compose.material3.RangeSlider
-import androidx.compose.material3.Slider
-import androidx.compose.material3.Text
-import androidx.compose.material3.rememberModalBottomSheetState
+import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -28,83 +12,92 @@ import com.trycatchers.hotel.compose.components.ui.DropDown
 import com.trycatchers.hotel.viewmodels.RoomFinderViewModel.RoomSortOption
 import kotlin.math.roundToInt
 
+/**
+ * Bottom sheet de filtros avanzados reutilizable para listados de habitaciones.
+ */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun RoomFiltersSheet(
-        occupants: Int,
-        onOccupantsChange: (Int) -> Unit,
-        isVip: Boolean,
-        onVipChange: (Boolean) -> Unit,
-        needsExtraBed: Boolean,
-        onNeedsExtraBedChange: (Boolean) -> Unit,
-        needsCrib: Boolean,
-        onNeedsCribChange: (Boolean) -> Unit,
-        onlyOffers: Boolean,
-        onOnlyOffersChange: (Boolean) -> Unit,
-        priceRange: ClosedFloatingPointRange<Float>,
-        onPriceRangeChange: (ClosedFloatingPointRange<Float>) -> Unit,
-        sortOption: RoomSortOption,
-        onSortOptionChange: (RoomSortOption) -> Unit,
-        onlyWithExtras: Boolean,
-        onOnlyWithExtrasChange: (Boolean) -> Unit,
-        onlyWithImages: Boolean,
-        onOnlyWithImagesChange: (Boolean) -> Unit,
-        minimumRating: Float?,
-        onMinimumRatingChange: (Float) -> Unit,
-        onDismiss: () -> Unit,
-        onApply: () -> Unit,
+    occupants: Int,
+    onOccupantsChange: (Int) -> Unit,
+    isVip: Boolean,
+    onVipChange: (Boolean) -> Unit,
+    needsExtraBed: Boolean,
+    onNeedsExtraBedChange: (Boolean) -> Unit,
+    needsCrib: Boolean,
+    onNeedsCribChange: (Boolean) -> Unit,
+    onlyOffers: Boolean,
+    onOnlyOffersChange: (Boolean) -> Unit,
+    priceRange: ClosedFloatingPointRange<Float>,
+    onPriceRangeChange: (ClosedFloatingPointRange<Float>) -> Unit,
+    sortOption: RoomSortOption,
+    onSortOptionChange: (RoomSortOption) -> Unit,
+    onlyWithExtras: Boolean,
+    onOnlyWithExtrasChange: (Boolean) -> Unit,
+    onlyWithImages: Boolean,
+    onOnlyWithImagesChange: (Boolean) -> Unit,
+    minimumRating: Float?,
+    onMinimumRatingChange: (Float) -> Unit,
+    onDismiss: () -> Unit,
+    onApply: () -> Unit,
 ) {
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
 
     ModalBottomSheet(onDismissRequest = onDismiss, sheetState = sheetState) {
         Column(
-                modifier =
-                        Modifier.fillMaxWidth()
-                                .padding(horizontal = 24.dp, vertical = 16.dp)
-                                .verticalScroll(rememberScrollState()),
-                verticalArrangement = Arrangement.spacedBy(20.dp)
+            modifier =
+                Modifier.fillMaxWidth()
+                    .padding(horizontal = 24.dp, vertical = 16.dp)
+                    .verticalScroll(rememberScrollState()),
+            verticalArrangement = Arrangement.spacedBy(20.dp)
         ) {
             Text(text = "Filtros rápidos")
 
             DropDown(
-                    items = listOf(1, 2, 3, 4, 5, 6),
-                    item = occupants,
-                    onItemSelected = onOccupantsChange,
-                    label = "¿Cuántas personas?",
-                    itemToString = { "$it persona${if (it > 1) "s" else ""}" }
+                items = listOf(1, 2, 3, 4, 5, 6),
+                item = occupants,
+                onItemSelected = onOccupantsChange,
+                label = "¿Cuántas personas?",
+                itemToString = { "$it persona${if (it > 1) "s" else ""}" }
             )
 
             HorizontalDivider()
 
             FilterToggle(label = "Cliente VIP", checked = isVip, onCheckedChange = onVipChange)
             FilterToggle(
-                    label = "Necesito cama extra",
-                    checked = needsExtraBed,
-                    onCheckedChange = onNeedsExtraBedChange
+                label = "Necesito cama extra",
+                checked = needsExtraBed,
+                onCheckedChange = onNeedsExtraBedChange
             )
             FilterToggle(
-                    label = "Necesito cuna",
-                    checked = needsCrib,
-                    onCheckedChange = onNeedsCribChange
+                label = "Necesito cuna",
+                checked = needsCrib,
+                onCheckedChange = onNeedsCribChange
             )
             FilterToggle(
-                    label = "Solo ofertas",
-                    checked = onlyOffers,
-                    onCheckedChange = onOnlyOffersChange
+                label = "Solo ofertas",
+                checked = onlyOffers,
+                onCheckedChange = onOnlyOffersChange
             )
 
             HorizontalDivider()
 
-            Text(text = "Rango de precios")
-            RangeSlider(
-                    value = priceRange,
-                    onValueChange = onPriceRangeChange,
-                    valueRange = 0f..1000f,
-                    steps = 4
+
+            Text(
+                text = "Rango de precios por noche",
+                style = MaterialTheme.typography.titleMedium,
             )
+
+            RangeSlider(
+                value = priceRange,
+                onValueChange = onPriceRangeChange,
+                valueRange = 0f..500f,
+                steps = 100,
+            )
+
             Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween
             ) {
                 Text(text = "${priceRange.start.toInt()}€")
                 Text(text = "${priceRange.endInclusive.toInt()}€")
@@ -115,9 +108,9 @@ fun RoomFiltersSheet(
             Text(text = "Ordenar por")
             RoomSortOption.values().forEach { option ->
                 SortOptionRow(
-                        label = option.label,
-                        selected = option == sortOption,
-                        onSelected = { onSortOptionChange(option) }
+                    label = option.label,
+                    selected = option == sortOption,
+                    onSelected = { onSortOptionChange(option) }
                 )
             }
 
@@ -125,31 +118,31 @@ fun RoomFiltersSheet(
 
             Text(text = "Filtros adicionales")
             FilterToggle(
-                    label = "Solo con extras incluidos",
-                    checked = onlyWithExtras,
-                    onCheckedChange = onOnlyWithExtrasChange
+                label = "Solo con extras incluidos",
+                checked = onlyWithExtras,
+                onCheckedChange = onOnlyWithExtrasChange
             )
             FilterToggle(
-                    label = "Solo con imagen",
-                    checked = onlyWithImages,
-                    onCheckedChange = onOnlyWithImagesChange
+                label = "Solo con imagen",
+                checked = onlyWithImages,
+                onCheckedChange = onOnlyWithImagesChange
             )
 
             val sliderValue = minimumRating ?: 0f
             Text(text = "Valoración mínima")
             Slider(
-                    value = sliderValue,
-                    onValueChange = { value ->
-                        val normalized = if (value < 0.5f) 0f else value.roundToInt().toFloat()
-                        onMinimumRatingChange(normalized)
-                    },
-                    valueRange = 0f..5f,
-                    steps = 4
+                value = sliderValue,
+                onValueChange = { value ->
+                    val normalized = if (value < 0.5f) 0f else value.roundToInt().toFloat()
+                    onMinimumRatingChange(normalized)
+                },
+                valueRange = 0f..5f,
+                steps = 4
             )
             Text(
-                    text =
-                            if (sliderValue <= 0f) "Cualquiera"
-                            else "${sliderValue.toInt()}+ estrellas"
+                text =
+                    if (sliderValue <= 0f) "Cualquiera"
+                    else "${sliderValue.toInt()}+ estrellas"
             )
 
             Spacer(modifier = Modifier.height(12.dp))
@@ -181,8 +174,8 @@ private fun SortOptionRow(label: String, selected: Boolean, onSelected: () -> Un
 
 private val RoomSortOption.label: String
     get() =
-            when (this) {
-                RoomSortOption.PRICE_ASC -> "Precio ascendente"
-                RoomSortOption.PRICE_DESC -> "Precio descendente"
-                RoomSortOption.RATING_DESC -> "Mejor valoración"
-            }
+        when (this) {
+            RoomSortOption.PRICE_ASC -> "Precio ascendente"
+            RoomSortOption.PRICE_DESC -> "Precio descendente"
+            RoomSortOption.RATING_DESC -> "Mejor valoración"
+        }
