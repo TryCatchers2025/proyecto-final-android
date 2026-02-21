@@ -10,7 +10,7 @@ import retrofit2.http.Path
 
 interface RoomService {
 
-    @GET("rooms")
+    @GET("api/rooms")
     suspend fun getAllRooms(): List<RoomDto>
 
     @GET("rooms/{id}")

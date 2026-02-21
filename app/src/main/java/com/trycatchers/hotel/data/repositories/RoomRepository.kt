@@ -37,5 +37,10 @@ fun Room.toDto() = RoomDto(
     roomId = roomId,
     number = number,
     price = price,
-    type = type
+    type = type,
+    name = name,
+    occupied = occupied,
+    limit = limit,
+    offer = offer,
+    description = description
 )
