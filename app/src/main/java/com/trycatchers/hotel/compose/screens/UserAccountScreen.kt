@@ -28,7 +28,6 @@ import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.trycatchers.hotel.data.models.Booking
 import coil.compose.rememberAsyncImagePainter
-import com.trycatchers.hotel.data.models.Booking
 import com.trycatchers.hotel.utils.ApiConfig
 import com.trycatchers.hotel.utils.formatDisplayDate
 import com.trycatchers.hotel.utils.parseApiDate
