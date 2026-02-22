@@ -28,10 +28,6 @@ fun RoomFiltersSheet(
     onPriceRangeChange: (ClosedFloatingPointRange<Float>) -> Unit,
     sortOption: RoomSortOption,
     onSortOptionChange: (RoomSortOption) -> Unit,
-    onlyWithExtras: Boolean,
-    onOnlyWithExtrasChange: (Boolean) -> Unit,
-    onlyWithImages: Boolean,
-    onOnlyWithImagesChange: (Boolean) -> Unit,
     minimumRating: Float?,
     onMinimumRatingChange: (Float) -> Unit,
     onDismiss: () -> Unit,
@@ -87,18 +83,6 @@ fun RoomFiltersSheet(
             RoomSortOptionsSection(sortOption = sortOption, onSortOptionChange = onSortOptionChange)
 
             HorizontalDivider()
-
-            Text(text = "Filtros adicionales")
-            RoomFilterToggle(
-                label = "Solo con extras incluidos",
-                checked = onlyWithExtras,
-                onCheckedChange = onOnlyWithExtrasChange
-            )
-            RoomFilterToggle(
-                label = "Solo con imagen",
-                checked = onlyWithImages,
-                onCheckedChange = onOnlyWithImagesChange
-            )
 
             RoomRatingSection(
                 minimumRating = minimumRating,

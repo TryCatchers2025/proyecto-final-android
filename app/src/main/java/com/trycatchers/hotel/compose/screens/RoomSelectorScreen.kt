@@ -54,10 +54,6 @@ fun RoomSelectorScreen(
             onPriceRangeChange = viewModel::setPriceRange,
             sortOption = filtersState.sortOption,
             onSortOptionChange = viewModel::setSortOption,
-            onlyWithExtras = filtersState.onlyWithExtras,
-            onOnlyWithExtrasChange = viewModel::setOnlyWithExtras,
-            onlyWithImages = filtersState.onlyWithImages,
-            onOnlyWithImagesChange = viewModel::setOnlyWithImages,
             minimumRating = filtersState.minimumRating,
             onMinimumRatingChange = viewModel::setMinimumRating,
             onDismiss = { showFilters.value = false },
@@ -226,7 +222,6 @@ private fun SelectorList(
             RoomCard(
                 room = room,
                 onViewDetails = onViewDetails,
-                onReserve = onReserve,
                 modifier = Modifier.fillMaxWidth()
             ) { modifier ->
                 Button(
