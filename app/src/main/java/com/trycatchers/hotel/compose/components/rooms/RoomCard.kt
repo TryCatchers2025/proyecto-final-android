@@ -22,7 +22,6 @@ import com.trycatchers.hotel.data.models.Room
 fun RoomCard(
     room: Room,
     onViewDetails: (String) -> Unit,
-    onReserve: (String) -> Unit,
     modifier: Modifier = Modifier,
     actionButton: @Composable ((Modifier) -> Unit)? = null,
 ) {
@@ -183,7 +182,6 @@ fun RoomCardPreview() {
     RoomCard(
         room = sampleRoom,
         onViewDetails = {},
-        onReserve = {}
     ) { modifier ->
         OutlinedButton(onClick = {}, modifier = modifier) {
             Text("Reservar")

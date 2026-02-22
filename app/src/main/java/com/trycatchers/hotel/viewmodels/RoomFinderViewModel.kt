@@ -2,11 +2,9 @@ package com.trycatchers.hotel.viewmodels
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.trycatchers.hotel.data.dtos.RoomSearchFilters
 import com.trycatchers.hotel.data.models.Room
 import com.trycatchers.hotel.data.repositories.RoomRepository
 import com.trycatchers.hotel.data.repositories.SessionRepository
-import com.trycatchers.hotel.utils.formatApiDate
 import com.trycatchers.hotel.utils.millisToLocalDate
 import com.trycatchers.hotel.utils.toUserMessage
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -15,7 +13,6 @@ import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import javax.inject.Inject
-import kotlin.math.roundToInt
 
 data class RoomSearchUiState(
     val isLoading: Boolean = false,
@@ -30,14 +27,11 @@ data class RoomSearchUiState(
 data class RoomFinderFiltersUiState(
     val dates: Pair<Long?, Long?> = Pair(null, null),
     val occupants: Int = 1,
-    val isVip: Boolean = false,
     val needsExtraBed: Boolean = false,
     val needsCrib: Boolean = false,
     val onlyOffers: Boolean = false,
     val priceRange: ClosedFloatingPointRange<Float> = 0f..500f,
     val sortOption: RoomFinderViewModel.RoomSortOption = RoomFinderViewModel.RoomSortOption.PRICE_ASC,
-    val onlyWithExtras: Boolean = false,
-    val onlyWithImages: Boolean = false,
     val minimumRating: Float? = null,
     val canSearch: Boolean = false,
     val dateValidationError: String? = null,
@@ -47,14 +41,11 @@ private data class RoomSearchParams(
     val startDateMillis: Long,
     val endDateMillis: Long,
     val occupants: Int,
-    val isVip: Boolean,
     val needsExtraBed: Boolean,
     val needsCrib: Boolean,
     val onlyOffers: Boolean,
     val priceRange: ClosedFloatingPointRange<Float>,
     val sortOption: RoomFinderViewModel.RoomSortOption,
-    val onlyWithExtras: Boolean,
-    val onlyWithImages: Boolean,
     val minimumRating: Float?,
 )
 
@@ -81,7 +72,6 @@ constructor(
 
     private val _dates: MutableStateFlow<Pair<Long?, Long?>> = MutableStateFlow(Pair(null, null))
     private val _occupants: MutableStateFlow<Int> = MutableStateFlow(1)
-    private val _isVip: MutableStateFlow<Boolean> = MutableStateFlow(false)
     private val _needsExtraBed: MutableStateFlow<Boolean> = MutableStateFlow(false)
     private val _needsCrib: MutableStateFlow<Boolean> = MutableStateFlow(false)
     private val _onlyOffers: MutableStateFlow<Boolean> = MutableStateFlow(false)
@@ -89,22 +79,17 @@ constructor(
         MutableStateFlow(DEFAULT_PRICE_RANGE)
     private val _sortOption: MutableStateFlow<RoomSortOption> =
         MutableStateFlow(RoomSortOption.PRICE_ASC)
-    private val _onlyWithExtras: MutableStateFlow<Boolean> = MutableStateFlow(false)
-    private val _onlyWithImages: MutableStateFlow<Boolean> = MutableStateFlow(false)
     private val _minimumRating: MutableStateFlow<Float?> = MutableStateFlow(null)
     private val _selectedRoomId: MutableStateFlow<String?> = MutableStateFlow(null)
     private val _dateValidationError: MutableStateFlow<String?> = MutableStateFlow(null)
 
     val dates: StateFlow<Pair<Long?, Long?>> = _dates
     val occupants: StateFlow<Int> = _occupants
-    val isVip: StateFlow<Boolean> = _isVip
     val needsExtraBed: StateFlow<Boolean> = _needsExtraBed
     val needsCrib: StateFlow<Boolean> = _needsCrib
     val onlyOffers: StateFlow<Boolean> = _onlyOffers
     val priceRange: StateFlow<ClosedFloatingPointRange<Float>> = _priceRange
     val sortOption: StateFlow<RoomSortOption> = _sortOption
-    val onlyWithExtras: StateFlow<Boolean> = _onlyWithExtras
-    val onlyWithImages: StateFlow<Boolean> = _onlyWithImages
     val minimumRating: StateFlow<Float?> = _minimumRating
     val selectedRoomId: StateFlow<String?> = _selectedRoomId.asStateFlow()
     val dateValidationError: StateFlow<String?> = _dateValidationError.asStateFlow()
@@ -119,7 +104,6 @@ constructor(
     private data class PrimaryFilters(
         val dates: Pair<Long?, Long?>,
         val occupants: Int,
-        val isVip: Boolean,
         val needsExtraBed: Boolean,
         val needsCrib: Boolean,
     )
@@ -128,8 +112,6 @@ constructor(
         val onlyOffers: Boolean,
         val priceRange: ClosedFloatingPointRange<Float>,
         val sortOption: RoomSortOption,
-        val onlyWithExtras: Boolean,
-        val onlyWithImages: Boolean,
     )
 
     private data class ValidationFilters(
@@ -139,36 +121,26 @@ constructor(
     )
 
     private val primaryFiltersFlow =
-        combine(dates, occupants, isVip, needsExtraBed, needsCrib) {
+        combine(dates, occupants, needsExtraBed, needsCrib) {
                 selectedDates,
                 selectedOccupants,
-                selectedIsVip,
                 selectedNeedsExtraBed,
                 selectedNeedsCrib,
             ->
             PrimaryFilters(
                 dates = selectedDates,
                 occupants = selectedOccupants,
-                isVip = selectedIsVip,
                 needsExtraBed = selectedNeedsExtraBed,
                 needsCrib = selectedNeedsCrib,
             )
         }
 
     private val secondaryFiltersFlow =
-        combine(onlyOffers, priceRange, sortOption, onlyWithExtras, onlyWithImages) {
-                selectedOnlyOffers,
-                selectedPriceRange,
-                selectedSortOption,
-                selectedOnlyWithExtras,
-                selectedOnlyWithImages,
-            ->
+        combine(onlyOffers, priceRange, sortOption) { selectedOnlyOffers, selectedPriceRange, selectedSortOption ->
             SecondaryFilters(
                 onlyOffers = selectedOnlyOffers,
                 priceRange = selectedPriceRange,
-                sortOption = selectedSortOption,
-                onlyWithExtras = selectedOnlyWithExtras,
-                onlyWithImages = selectedOnlyWithImages,
+                sortOption = selectedSortOption
             )
         }
 
@@ -194,14 +166,11 @@ constructor(
             RoomFinderFiltersUiState(
                 dates = primary.dates,
                 occupants = primary.occupants,
-                isVip = primary.isVip,
                 needsExtraBed = primary.needsExtraBed,
                 needsCrib = primary.needsCrib,
                 onlyOffers = secondary.onlyOffers,
                 priceRange = secondary.priceRange,
                 sortOption = secondary.sortOption,
-                onlyWithExtras = secondary.onlyWithExtras,
-                onlyWithImages = secondary.onlyWithImages,
                 minimumRating = validation.minimumRating,
                 canSearch = validation.canSearch,
                 dateValidationError = validation.dateValidationError,
@@ -227,10 +196,6 @@ constructor(
         _occupants.value = occupants
     }
 
-    fun setIsVip(isVip: Boolean) {
-        _isVip.value = isVip
-    }
-
     fun setNeedsExtraBed(needsExtraBed: Boolean) {
         _needsExtraBed.value = needsExtraBed
     }
@@ -251,14 +216,6 @@ constructor(
         _sortOption.value = option
     }
 
-    fun setOnlyWithExtras(onlyWithExtras: Boolean) {
-        _onlyWithExtras.value = onlyWithExtras
-    }
-
-    fun setOnlyWithImages(onlyWithImages: Boolean) {
-        _onlyWithImages.value = onlyWithImages
-    }
-
     fun setMinimumRating(minimumRating: Float) {
         _minimumRating.value = minimumRating.takeIf { it > 0f }
     }
@@ -268,20 +225,16 @@ constructor(
     }
 
     fun reset() {
-        // Preserve dates and selected room when resetting (only reset search filters and results)
         val savedDates = _dates.value
         val savedRoomId = _selectedRoomId.value
 
         _dates.value = savedDates
         _occupants.value = 1
-        _isVip.value = false
         _needsExtraBed.value = false
         _needsCrib.value = false
         _onlyOffers.value = false
         _priceRange.value = DEFAULT_PRICE_RANGE
         _sortOption.value = RoomSortOption.PRICE_ASC
-        _onlyWithExtras.value = false
-        _onlyWithImages.value = false
         _minimumRating.value = null
         _searchState.value = RoomSearchUiState()
         _canSearch.value = false
@@ -292,14 +245,11 @@ constructor(
     fun fullReset() {
         _dates.value = Pair(null, null)
         _occupants.value = 1
-        _isVip.value = false
         _needsExtraBed.value = false
         _needsCrib.value = false
         _onlyOffers.value = false
         _priceRange.value = DEFAULT_PRICE_RANGE
         _sortOption.value = RoomSortOption.PRICE_ASC
-        _onlyWithExtras.value = false
-        _onlyWithImages.value = false
         _minimumRating.value = null
         _searchState.value = RoomSearchUiState()
         _canSearch.value = false
@@ -343,14 +293,11 @@ constructor(
                 startDateMillis = startMillis,
                 endDateMillis = endMillis,
                 occupants = _occupants.value,
-                isVip = _isVip.value,
                 needsExtraBed = _needsExtraBed.value,
                 needsCrib = _needsCrib.value,
                 onlyOffers = _onlyOffers.value,
                 priceRange = _priceRange.value,
                 sortOption = _sortOption.value,
-                onlyWithExtras = _onlyWithExtras.value,
-                onlyWithImages = _onlyWithImages.value,
                 minimumRating = _minimumRating.value,
             )
 
@@ -360,95 +307,34 @@ constructor(
 
         viewModelScope.launch {
             _searchState.value = RoomSearchUiState(isLoading = true)
-
             try {
-                val filters = params.toFilters()
+                val filters = com.trycatchers.hotel.data.dtos.RoomSearchFilters(
+                    startDate = params.startDateMillis.toString(),
+                    endDate = params.endDateMillis.toString(),
+                    occupants = params.occupants,
+                    onlyOffers = params.onlyOffers,
+                    needsCrib = params.needsCrib,
+                    needsExtraBed = params.needsExtraBed,
+                    minPrice = params.priceRange.start.toInt(),
+                    maxPrice = params.priceRange.endInclusive.toInt(),
+                    minimumRating = params.minimumRating
+                )
                 val rooms = withContext(Dispatchers.IO) { roomRepository.searchAvailable(filters) }
                 lastParams = params
-
-                val processedRooms = params.applyClientFilters(rooms)
-
-                _searchState.value = RoomSearchUiState(rooms = processedRooms)
+                val sortedRooms = when (params.sortOption) {
+                    RoomSortOption.PRICE_ASC -> rooms.sortedBy { it.pricePerNight }
+                    RoomSortOption.PRICE_DESC -> rooms.sortedByDescending { it.pricePerNight }
+                    RoomSortOption.RATING_DESC -> rooms.sortedByDescending { it.rate ?: 0.0 }
+                }
+                _searchState.value = RoomSearchUiState(rooms = sortedRooms)
             } catch (error: Exception) {
-                _searchState.value =
-                    RoomSearchUiState(
-                        errorMessage =
-                            error.toUserMessage(
-                                defaultMessage =
-                                    "No se pudieron cargar las habitaciones disponibles."
-                            )
+                _searchState.value = RoomSearchUiState(
+                    errorMessage = error.toUserMessage(
+                        defaultMessage = "No se pudieron cargar las habitaciones disponibles."
                     )
+                )
             }
         }
-    }
-
-    private fun RoomSearchParams.applyClientFilters(source: List<Room>): List<Room> {
-        var filtered = source.asSequence()
-
-        filtered = filtered.filter { room -> room.occupancyLimit >= occupants }
-
-        if (onlyOffers) {
-            filtered = filtered.filter { (it.offerPercentage ?: 0.0) > 0.0 }
-        }
-
-        if (needsCrib) {
-            filtered = filtered.filter { it.hasCradle }
-        }
-
-        if (needsExtraBed) {
-            filtered = filtered.filter { it.hasExtraBed }
-        }
-
-        if (isVip) {
-            filtered = filtered.filter { it.type.contains("suite", ignoreCase = true) }
-        }
-
-        filtered =
-            filtered.filter { room ->
-                room.pricePerNight >= priceRange.start &&
-                        room.pricePerNight <= priceRange.endInclusive
-            }
-
-        if (onlyWithExtras) {
-            filtered = filtered.filter { it.extras.isNotEmpty() }
-        }
-
-        if (onlyWithImages) {
-            filtered = filtered.filter { !it.mainImage.isNullOrBlank() }
-        }
-
-        minimumRating?.let { threshold ->
-            filtered = filtered.filter { (it.rate ?: 0.0) >= threshold.toDouble() }
-        }
-
-        val filteredList = filtered.toList()
-
-        return when (sortOption) {
-            RoomSortOption.PRICE_ASC -> filteredList.sortedBy { it.pricePerNight }
-            RoomSortOption.PRICE_DESC -> filteredList.sortedByDescending { it.pricePerNight }
-            RoomSortOption.RATING_DESC -> filteredList.sortedByDescending { it.rate ?: 0.0 }
-        }
-    }
-
-    private fun RoomSearchParams.toFilters(): RoomSearchFilters {
-        val minPrice = priceRange.start.roundToInt()
-        val maxPrice = priceRange.endInclusive.roundToInt()
-
-        val normalizedMin = minPrice.takeIf { priceRange.start > DEFAULT_PRICE_RANGE.start }
-        val normalizedMax =
-            maxPrice.takeIf { priceRange.endInclusive < DEFAULT_PRICE_RANGE.endInclusive }
-
-        return RoomSearchFilters(
-            startDate = formatApiDate(startDateMillis),
-            endDate = formatApiDate(endDateMillis),
-            occupants = occupants,
-            onlyOffers = onlyOffers,
-            needsCrib = needsCrib,
-            needsExtraBed = needsExtraBed,
-            isVip = isVip,
-            minPrice = normalizedMin,
-            maxPrice = normalizedMax,
-        )
     }
 
     private fun updateCanSearch() {

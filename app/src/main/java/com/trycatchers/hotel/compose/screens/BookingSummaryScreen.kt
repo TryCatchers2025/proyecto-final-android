@@ -245,6 +245,12 @@ private fun SummaryPriceCard(state: BookingSummaryUiState) {
             Text(text = "Resumen de pago", style = MaterialTheme.typography.titleSmall)
             BookingDetailRow(label = "Precio por noche", value = state.formattedPricePerNight)
             BookingDetailRow(label = "Noches", value = state.nights.toString())
+            if (state.isVip) {
+                BookingDetailRow(label = "Descuento VIP", value = "10,0%")
+            }
+            if (state.discount > 0.0) {
+                BookingDetailRow(label = "Descuento total", value = "${state.discount}%")
+            }
             HorizontalDivider()
             BookingDetailRow(label = "Total", value = state.formattedTotalPrice, emphasize = true)
         }

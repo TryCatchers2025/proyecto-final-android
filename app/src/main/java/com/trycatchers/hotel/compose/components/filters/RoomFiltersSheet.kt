@@ -18,8 +18,6 @@ import com.trycatchers.hotel.viewmodels.RoomFinderViewModel.RoomSortOption
 fun RoomFiltersSheet(
     occupants: Int,
     onOccupantsChange: (Int) -> Unit,
-    isVip: Boolean,
-    onVipChange: (Boolean) -> Unit,
     needsExtraBed: Boolean,
     onNeedsExtraBedChange: (Boolean) -> Unit,
     needsCrib: Boolean,
@@ -30,10 +28,6 @@ fun RoomFiltersSheet(
     onPriceRangeChange: (ClosedFloatingPointRange<Float>) -> Unit,
     sortOption: RoomSortOption,
     onSortOptionChange: (RoomSortOption) -> Unit,
-    onlyWithExtras: Boolean,
-    onOnlyWithExtrasChange: (Boolean) -> Unit,
-    onlyWithImages: Boolean,
-    onOnlyWithImagesChange: (Boolean) -> Unit,
     minimumRating: Float?,
     onMinimumRatingChange: (Float) -> Unit,
     onDismiss: () -> Unit,
@@ -61,7 +55,6 @@ fun RoomFiltersSheet(
 
             HorizontalDivider()
 
-            RoomFilterToggle(label = "Cliente VIP", checked = isVip, onCheckedChange = onVipChange)
             RoomFilterToggle(
                 label = "Necesito cama extra",
                 checked = needsExtraBed,
@@ -90,18 +83,6 @@ fun RoomFiltersSheet(
             RoomSortOptionsSection(sortOption = sortOption, onSortOptionChange = onSortOptionChange)
 
             HorizontalDivider()
-
-            Text(text = "Filtros adicionales")
-            RoomFilterToggle(
-                label = "Solo con extras incluidos",
-                checked = onlyWithExtras,
-                onCheckedChange = onOnlyWithExtrasChange
-            )
-            RoomFilterToggle(
-                label = "Solo con imagen",
-                checked = onlyWithImages,
-                onCheckedChange = onOnlyWithImagesChange
-            )
 
             RoomRatingSection(
                 minimumRating = minimumRating,

@@ -31,6 +31,8 @@ data class BookingPaymentUiState(
     val totalPrice: Double = 0.0,
     val isPaid: Boolean = false,
     val errorMessage: String? = null,
+    val discount: Double = 0.0,
+    val isVip: Boolean = false,
 ) {
     val formattedTotalPrice: String
         get() = NumberFormat.getCurrencyInstance(Locale("es", "ES")).format(totalPrice)

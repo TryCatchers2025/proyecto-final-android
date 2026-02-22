@@ -38,8 +38,6 @@ fun RoomCatalogScreen(
         RoomFiltersSheet(
             occupants = state.occupants,
             onOccupantsChange = viewModel::setOccupants,
-            isVip = state.isVip,
-            onVipChange = viewModel::setIsVip,
             needsExtraBed = state.needsExtraBed,
             onNeedsExtraBedChange = viewModel::setNeedsExtraBed,
             needsCrib = state.needsCrib,
@@ -50,10 +48,6 @@ fun RoomCatalogScreen(
             onPriceRangeChange = viewModel::setPriceRange,
             sortOption = state.sortOption,
             onSortOptionChange = viewModel::setSortOption,
-            onlyWithExtras = state.onlyWithExtras,
-            onOnlyWithExtrasChange = viewModel::setOnlyWithExtras,
-            onlyWithImages = state.onlyWithImages,
-            onOnlyWithImagesChange = viewModel::setOnlyWithImages,
             minimumRating = state.minimumRating,
             onMinimumRatingChange = viewModel::setMinimumRating,
             onDismiss = { showFilters.value = false },
@@ -108,9 +102,6 @@ fun RoomCatalogScreen(
                             RoomCard(
                                 room = room,
                                 onViewDetails = navigateToRoomDetails,
-                                onReserve =
-                                    navigateToRoomDetails, // Redirect to details first if
-                                // no dates
                                 modifier = Modifier.fillMaxWidth()
                             )
                         }

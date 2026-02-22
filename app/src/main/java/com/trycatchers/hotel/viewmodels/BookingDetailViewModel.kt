@@ -62,13 +62,28 @@ data class BookingDetailUiState(
     val isPaid: Boolean
         get() = booking?.isPaid == true
 
-    /** La reserva puede cancelarse si no está ya cancelada. */
-    val canCancel: Boolean
-        get() = !isCanceled
 
-    /** La reserva puede extenderse si está activa y pagada. */
+    /**
+     * La reserva puede cancelarse si no está cancelada y la fecha de check-in no ha pasado.
+     * No se puede cancelar si la fecha de check-in está en el pasado.
+     */
+    val canCancel: Boolean
+        get() {
+            if (isCanceled) return false
+            val checkIn = parseApiDate(booking?.startDate) ?: return false
+            return !checkIn.isBefore(LocalDate.now())
+        }
+
+    /**
+     * La reserva puede extenderse si no está cancelada, está pagada y la fecha de check-out no ha pasado.
+     * No se puede extender si la fecha de check-out está en el pasado.
+     */
     val canExtend: Boolean
-        get() = !isCanceled && isPaid
+        get() {
+            if (isCanceled || !isPaid) return false
+            val checkOut = parseApiDate(booking?.endDate) ?: return false
+            return !checkOut.isBefore(LocalDate.now())
+        }
 
     /** La reserva puede pagarse si está activa y no pagada. */
     val canPay: Boolean

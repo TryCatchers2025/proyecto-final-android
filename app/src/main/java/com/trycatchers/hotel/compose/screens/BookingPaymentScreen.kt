@@ -203,6 +203,12 @@ private fun BookingPaymentSummary(state: BookingPaymentUiState) {
                 fontWeight = FontWeight.SemiBold
             )
             Spacer(modifier = Modifier.height(12.dp))
+            if (state.isVip) {
+                BookingDetailRow(label = "Descuento VIP", value = "10,0%")
+            }
+            if (state.discount > 0.0) {
+                BookingDetailRow(label = "Descuento total", value = "${state.discount}%")
+            }
             BookingDetailRow(label = "Importe total", value = state.formattedTotalPrice)
             HorizontalDivider(modifier = Modifier.padding(vertical = 12.dp))
             Text(

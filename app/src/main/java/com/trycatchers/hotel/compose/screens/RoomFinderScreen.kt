@@ -33,7 +33,6 @@ fun RoomFinderScreen(
     RoomFinderView(
         onDatesChange = viewModel::setDates,
         onOccupantsChange = viewModel::setOccupants,
-        onIsVipChange = viewModel::setIsVip,
         onNeedsExtraBedChange = viewModel::setNeedsExtraBed,
         onNeedsCribChange = viewModel::setNeedsCrib,
         onOnlyOffersChange = viewModel::setOnlyOffers,
@@ -46,7 +45,6 @@ fun RoomFinderScreen(
         canSearch = filtersState.canSearch,
         dates = filtersState.dates,
         occupants = filtersState.occupants,
-        isVip = filtersState.isVip,
         needsExtraBed = filtersState.needsExtraBed,
         needsCrib = filtersState.needsCrib,
         onlyOffers = filtersState.onlyOffers,
@@ -60,7 +58,6 @@ fun RoomFinderScreen(
 fun RoomFinderView(
     onDatesChange: (Pair<Long, Long>) -> Unit,
     onOccupantsChange: (Int) -> Unit,
-    onIsVipChange: (Boolean) -> Unit,
     onNeedsExtraBedChange: (Boolean) -> Unit,
     onNeedsCribChange: (Boolean) -> Unit,
     onOnlyOffersChange: (Boolean) -> Unit,
@@ -70,7 +67,6 @@ fun RoomFinderView(
     canSearch: Boolean,
     dates: Pair<Long?, Long?>,
     occupants: Int,
-    isVip: Boolean,
     needsExtraBed: Boolean,
     needsCrib: Boolean,
     onlyOffers: Boolean,
@@ -124,7 +120,6 @@ fun RoomFinderView(
                 style = MaterialTheme.typography.titleMedium,
             )
 
-            RoomFilterToggle(label = "¿Eres VIP?", checked = isVip, onCheckedChange = onIsVipChange)
             RoomFilterToggle(
                 label = "Necesito una cama extra",
                 checked = needsExtraBed,
@@ -173,7 +168,6 @@ fun RoomFinderPreview() {
         RoomFinderView(
             onDatesChange = { _ -> },
             onOccupantsChange = {},
-            onIsVipChange = {},
             onNeedsExtraBedChange = {},
             onNeedsCribChange = {},
             onOnlyOffersChange = {},
@@ -183,7 +177,6 @@ fun RoomFinderPreview() {
             canSearch = true,
             dates = Pair(null, null),
             occupants = 1,
-            isVip = false,
             needsExtraBed = false,
             needsCrib = false,
             onlyOffers = false,
@@ -199,7 +192,6 @@ fun RoomFinderFiltersPreview() {
         RoomFinderView(
             onDatesChange = { _ -> },
             onOccupantsChange = {},
-            onIsVipChange = {},
             onNeedsExtraBedChange = {},
             onNeedsCribChange = {},
             onOnlyOffersChange = {},
@@ -209,7 +201,6 @@ fun RoomFinderFiltersPreview() {
             canSearch = true,
             dates = Pair(1771296600904, null),
             occupants = 2,
-            isVip = true,
             needsExtraBed = true,
             needsCrib = false,
             onlyOffers = true,

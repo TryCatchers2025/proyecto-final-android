@@ -12,7 +12,6 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
-import kotlin.math.roundToInt
 
 /** Filtros rápidos de ordenación visibles en la fila superior del catálogo. */
 enum class RoomCatalogFilter(val label: String) {
@@ -39,8 +38,6 @@ data class RoomCatalogUiState(
     val onlyOffers: Boolean = false,
     val priceRange: ClosedFloatingPointRange<Float> = 0f..500f,
     val sortOption: RoomFinderViewModel.RoomSortOption = RoomFinderViewModel.RoomSortOption.PRICE_ASC,
-    val onlyWithExtras: Boolean = false,
-    val onlyWithImages: Boolean = false,
     val minimumRating: Float? = null,
     val errorMessage: String? = null,
 )
@@ -102,9 +99,6 @@ class RoomCatalogViewModel @Inject constructor(
     /** Actualiza ocupantes requeridos para los filtros. */
     fun setOccupants(value: Int) = updateAndFilter { it.copy(occupants = value) }
 
-    /** Actualiza filtro VIP. */
-    fun setIsVip(value: Boolean) = updateAndFilter { it.copy(isVip = value) }
-
     /** Actualiza filtro de cama extra. */
     fun setNeedsExtraBed(value: Boolean) = updateAndFilter { it.copy(needsExtraBed = value) }
 
@@ -128,19 +122,42 @@ class RoomCatalogViewModel @Inject constructor(
         }
     }
 
-    /** Actualiza filtro de extras incluidos. */
-    fun setOnlyWithExtras(value: Boolean) = updateAndFilter { it.copy(onlyWithExtras = value) }
-
-    /** Actualiza filtro de habitaciones con imagen. */
-    fun setOnlyWithImages(value: Boolean) = updateAndFilter { it.copy(onlyWithImages = value) }
-
     /** Actualiza filtro de valoración mínima. */
     fun setMinimumRating(value: Float) =
         updateAndFilter { it.copy(minimumRating = value.takeIf { rating -> rating > 0f }) }
 
-    /** Fuerza reaplicación de filtros actuales. */
+    /** Fuerza reaplicación de filtros actuales y recarga desde backend. */
     fun applyFilters() {
-        _uiState.update { state -> state.copy(rooms = applyFilters(state.allRooms, state)) }
+        viewModelScope.launch {
+            _uiState.update { it.copy(isLoading = true, errorMessage = null) }
+            try {
+                val filters =
+                    com.trycatchers.hotel.data.dtos.RoomSearchFilters(
+                        startDate = "",
+                        endDate = "",
+                        occupants = _uiState.value.occupants,
+                        onlyOffers = _uiState.value.onlyOffers,
+                        needsCrib = _uiState.value.needsCrib,
+                        needsExtraBed = _uiState.value.needsExtraBed,
+                        isVip = _uiState.value.isVip,
+                        minPrice = _uiState.value.priceRange.start.toInt(),
+                        maxPrice = _uiState.value.priceRange.endInclusive.toInt(),
+                        minimumRating = _uiState.value.minimumRating
+                    )
+                val rooms = roomRepository.searchAvailable(filters)
+                _uiState.update {
+                    it.copy(isLoading = false, allRooms = rooms, rooms = applyFilters(rooms, it))
+                }
+            } catch (e: Exception) {
+                _uiState.update {
+                    it.copy(
+                        isLoading = false,
+                        errorMessage =
+                            e.toUserMessage("No se pudo cargar el catálogo de habitaciones")
+                    )
+                }
+            }
+        }
     }
 
     private fun updateAndFilter(transform: (RoomCatalogUiState) -> RoomCatalogUiState) {
@@ -151,33 +168,15 @@ class RoomCatalogViewModel @Inject constructor(
     }
 
     private fun applyFilters(rooms: List<Room>, state: RoomCatalogUiState): List<Room> {
-        val minPrice = state.priceRange.start.roundToInt().toDouble()
-        val maxPrice = state.priceRange.endInclusive.roundToInt().toDouble()
-
-        val filtered =
-            rooms.asSequence()
-                .filter { room -> room.occupancyLimit >= state.occupants }
-                .filter { room -> !state.needsExtraBed || room.hasExtraBed }
-                .filter { room -> !state.needsCrib || room.hasCradle }
-                .filter { room -> !state.onlyOffers || (room.offerPercentage ?: 0.0) > 0.0 }
-                .filter { room -> !state.onlyWithExtras || room.extras.isNotEmpty() }
-                .filter { room -> !state.onlyWithImages || !room.mainImage.isNullOrBlank() || room.extraImages.isNotEmpty() }
-                .filter { room -> state.minimumRating == null || (room.rate ?: 0.0) >= state.minimumRating }
-                .filter { room ->
-                    val finalPrice = room.finalPricePerNight()
-                    finalPrice in minPrice..maxPrice
-                }
-                .toList()
-
         return when (state.sortOption) {
             RoomFinderViewModel.RoomSortOption.PRICE_ASC ->
-                filtered.sortedBy { it.finalPricePerNight() }
+                rooms.sortedBy { it.finalPricePerNight() }
 
             RoomFinderViewModel.RoomSortOption.PRICE_DESC ->
-                filtered.sortedByDescending { it.finalPricePerNight() }
+                rooms.sortedByDescending { it.finalPricePerNight() }
 
             RoomFinderViewModel.RoomSortOption.RATING_DESC ->
-                filtered.sortedByDescending { it.rate ?: 0.0 }
+                rooms.sortedByDescending { it.rate ?: 0.0 }
         }
     }
 
