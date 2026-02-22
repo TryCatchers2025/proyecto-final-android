@@ -44,8 +44,6 @@ fun RoomSelectorScreen(
         RoomFiltersSheet(
             occupants = filtersState.occupants,
             onOccupantsChange = viewModel::setOccupants,
-            isVip = filtersState.isVip,
-            onVipChange = viewModel::setIsVip,
             needsExtraBed = filtersState.needsExtraBed,
             onNeedsExtraBedChange = viewModel::setNeedsExtraBed,
             needsCrib = filtersState.needsCrib,

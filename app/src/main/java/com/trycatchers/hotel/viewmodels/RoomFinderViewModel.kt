@@ -30,7 +30,6 @@ data class RoomSearchUiState(
 data class RoomFinderFiltersUiState(
     val dates: Pair<Long?, Long?> = Pair(null, null),
     val occupants: Int = 1,
-    val isVip: Boolean = false,
     val needsExtraBed: Boolean = false,
     val needsCrib: Boolean = false,
     val onlyOffers: Boolean = false,
@@ -47,7 +46,6 @@ private data class RoomSearchParams(
     val startDateMillis: Long,
     val endDateMillis: Long,
     val occupants: Int,
-    val isVip: Boolean,
     val needsExtraBed: Boolean,
     val needsCrib: Boolean,
     val onlyOffers: Boolean,
@@ -81,7 +79,6 @@ constructor(
 
     private val _dates: MutableStateFlow<Pair<Long?, Long?>> = MutableStateFlow(Pair(null, null))
     private val _occupants: MutableStateFlow<Int> = MutableStateFlow(1)
-    private val _isVip: MutableStateFlow<Boolean> = MutableStateFlow(false)
     private val _needsExtraBed: MutableStateFlow<Boolean> = MutableStateFlow(false)
     private val _needsCrib: MutableStateFlow<Boolean> = MutableStateFlow(false)
     private val _onlyOffers: MutableStateFlow<Boolean> = MutableStateFlow(false)
@@ -97,7 +94,6 @@ constructor(
 
     val dates: StateFlow<Pair<Long?, Long?>> = _dates
     val occupants: StateFlow<Int> = _occupants
-    val isVip: StateFlow<Boolean> = _isVip
     val needsExtraBed: StateFlow<Boolean> = _needsExtraBed
     val needsCrib: StateFlow<Boolean> = _needsCrib
     val onlyOffers: StateFlow<Boolean> = _onlyOffers
@@ -119,7 +115,6 @@ constructor(
     private data class PrimaryFilters(
         val dates: Pair<Long?, Long?>,
         val occupants: Int,
-        val isVip: Boolean,
         val needsExtraBed: Boolean,
         val needsCrib: Boolean,
     )
@@ -139,17 +134,15 @@ constructor(
     )
 
     private val primaryFiltersFlow =
-        combine(dates, occupants, isVip, needsExtraBed, needsCrib) {
+        combine(dates, occupants, needsExtraBed, needsCrib) {
                 selectedDates,
                 selectedOccupants,
-                selectedIsVip,
                 selectedNeedsExtraBed,
                 selectedNeedsCrib,
             ->
             PrimaryFilters(
                 dates = selectedDates,
                 occupants = selectedOccupants,
-                isVip = selectedIsVip,
                 needsExtraBed = selectedNeedsExtraBed,
                 needsCrib = selectedNeedsCrib,
             )
@@ -194,7 +187,6 @@ constructor(
             RoomFinderFiltersUiState(
                 dates = primary.dates,
                 occupants = primary.occupants,
-                isVip = primary.isVip,
                 needsExtraBed = primary.needsExtraBed,
                 needsCrib = primary.needsCrib,
                 onlyOffers = secondary.onlyOffers,
@@ -225,10 +217,6 @@ constructor(
 
     fun setOccupants(occupants: Int) {
         _occupants.value = occupants
-    }
-
-    fun setIsVip(isVip: Boolean) {
-        _isVip.value = isVip
     }
 
     fun setNeedsExtraBed(needsExtraBed: Boolean) {
@@ -274,7 +262,6 @@ constructor(
 
         _dates.value = savedDates
         _occupants.value = 1
-        _isVip.value = false
         _needsExtraBed.value = false
         _needsCrib.value = false
         _onlyOffers.value = false
@@ -292,7 +279,6 @@ constructor(
     fun fullReset() {
         _dates.value = Pair(null, null)
         _occupants.value = 1
-        _isVip.value = false
         _needsExtraBed.value = false
         _needsCrib.value = false
         _onlyOffers.value = false
@@ -343,7 +329,6 @@ constructor(
                 startDateMillis = startMillis,
                 endDateMillis = endMillis,
                 occupants = _occupants.value,
-                isVip = _isVip.value,
                 needsExtraBed = _needsExtraBed.value,
                 needsCrib = _needsCrib.value,
                 onlyOffers = _onlyOffers.value,
@@ -399,10 +384,6 @@ constructor(
             filtered = filtered.filter { it.hasExtraBed }
         }
 
-        if (isVip) {
-            filtered = filtered.filter { it.type.contains("suite", ignoreCase = true) }
-        }
-
         filtered =
             filtered.filter { room ->
                 room.pricePerNight >= priceRange.start &&
@@ -445,7 +426,6 @@ constructor(
             onlyOffers = onlyOffers,
             needsCrib = needsCrib,
             needsExtraBed = needsExtraBed,
-            isVip = isVip,
             minPrice = normalizedMin,
             maxPrice = normalizedMax,
         )

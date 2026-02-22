@@ -38,8 +38,6 @@ fun RoomCatalogScreen(
         RoomFiltersSheet(
             occupants = state.occupants,
             onOccupantsChange = viewModel::setOccupants,
-            isVip = state.isVip,
-            onVipChange = viewModel::setIsVip,
             needsExtraBed = state.needsExtraBed,
             onNeedsExtraBedChange = viewModel::setNeedsExtraBed,
             needsCrib = state.needsCrib,
