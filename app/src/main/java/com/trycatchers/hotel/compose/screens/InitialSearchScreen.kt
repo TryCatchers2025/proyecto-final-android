@@ -99,7 +99,7 @@ fun InitialSearchView(
 
                     Spacer(modifier = Modifier.height(16.dp))
 
-                    DatePickerRange(startDate = dates.first, endDate = dates.second) { selectedDates
+                    DatePickerRange(startDate = dates.first, endDate = dates.second, labelTextStyle = MaterialTheme.typography.bodyMedium) { selectedDates
                         ->
                         if (selectedDates.first != null && selectedDates.second != null) {
                             onDatesChange(Pair(selectedDates.first!!, selectedDates.second!!))

@@ -24,8 +24,8 @@ android {
 
     buildTypes {
         debug {
-            buildConfigField("String", "API_BASE_URL", "\"https://2953-90-166-216-10.ngrok-free.app/api/\"")
-            //buildConfigField("String", "API_BASE_URL", "\"http://vps-7c25fcfc.vps.ovh.ca/hotel/api/\"")
+            //buildConfigField("String", "API_BASE_URL", "\"http://10.0.2.2:3000/api/\"")
+            buildConfigField("String", "API_BASE_URL", "\"http://vps-7c25fcfc.vps.ovh.ca/hotel/api/\"")
         }
         release {
             isMinifyEnabled = false
@@ -33,7 +33,7 @@ android {
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
             )
-            buildConfigField("String", "API_BASE_URL", "\"https://2953-90-166-216-10.ngrok-free.app/api/\"")
+            buildConfigField("String", "API_BASE_URL", "\"http://vps-7c25fcfc.vps.ovh.ca/hotel/api/\"")
             signingConfig = signingConfigs.getByName("debug")
         }
     }
