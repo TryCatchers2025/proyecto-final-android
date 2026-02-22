@@ -30,8 +30,9 @@ sealed class Screen(
     data object RoomCatalog : Screen("room-catalog")
     data object UserAccount : Screen("user-account")
     data object UserProfile : Screen("user-profile")
-    data object Login : Screen("login-menu")
-    data object Register : Screen("register")
+
+    data object Login : Screen("login-menu", showBottomBar = false)
+    data object Register : Screen("register", showBottomBar = false)
     data object RoomDetails :
         Screen(
             "room-details/{roomId}",
