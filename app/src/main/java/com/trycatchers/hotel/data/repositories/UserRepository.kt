@@ -21,9 +21,9 @@ class UserRepository @Inject constructor(private val userService: UserService) {
         return userService.createUser(dto).toDomain()
     }
 
-    suspend fun update(id: String, user: User): User {
+    suspend fun update(id: String, user: User): UserDto {
         val dto = user.toDto()
-        return userService.updateUser(id, dto).toDomain()
+        return userService.updateUser(id, dto)
     }
 
     suspend fun delete(id: String) {
@@ -31,4 +31,16 @@ class UserRepository @Inject constructor(private val userService: UserService) {
     }
 }
 
-fun User.toDto() = UserDto(userId = userId, email = email, password = password, name = name)
+fun User.toDto() = UserDto(
+    userId = userId,
+    email = email,
+    password = password,
+    firstName = firstName,
+    lastName = lastName,
+    vip = vip,
+    gender = gender,
+    city = city,
+    birthDate = birthDate,
+    dni = dni,
+    photo = photo
+)

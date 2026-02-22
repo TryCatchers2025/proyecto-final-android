@@ -90,9 +90,32 @@ fun HotelPereMariaNavHost(
 
     NavHost(
         navController = navController,
-        startDestination = Screen.InitialSearch.route,
+        startDestination = Screen.Login.route,
         modifier = modifier
     ) {
+        composable(route = Screen.Login.route) {
+            LoginScreen(
+                onLoginSuccess = {
+                    navController.navigate(Screen.InitialSearch.route) {
+                        popUpTo(0) { inclusive = true }
+                    }
+                },
+                onRegisterClick = {
+                    navController.navigate(Screen.Register.route)
+                }
+            )
+        }
+
+        composable(route = Screen.Register.route) {
+            RegisterScreen(
+                onRegisterSuccess = {
+                    navController.navigate(Screen.InitialSearch.route) {
+                        popUpTo(0) { inclusive = true }
+                    }
+                }
+            )
+        }
+
         composable(route = Screen.InitialSearch.route) { backStackEntry ->
             val sharedRoomFinderViewModel: RoomFinderViewModel = hiltViewModel(backStackEntry)
 
@@ -169,6 +192,19 @@ fun HotelPereMariaNavHost(
             UserAccountScreen(
                 onNavigateToBookingDetail = { bookingId ->
                     navController.navigate(Screen.BookingDetail.createRoute(bookingId))
+                },
+                onNavigateToProfile = {
+                    navController.navigate(Screen.UserProfile.route)
+                }
+            )
+        }
+
+        composable(route = Screen.UserProfile.route) {
+            UserProfileScreen(
+                onLogout = {
+                    navController.navigate(Screen.Login.route) {
+                        popUpTo(0) { inclusive = true }
+                    }
                 }
             )
         }

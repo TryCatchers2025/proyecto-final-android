@@ -10,4 +10,7 @@ import com.trycatchers.hotel.BuildConfig
  */
 object ApiConfig {
     val BASE_URL = BuildConfig.API_BASE_URL
+
+    val BASE_DOMAIN: String
+        get() = BASE_URL.removeSuffix("api/")
 }

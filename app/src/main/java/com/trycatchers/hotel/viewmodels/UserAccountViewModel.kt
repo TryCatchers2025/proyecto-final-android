@@ -3,6 +3,7 @@ package com.trycatchers.hotel.viewmodels
 import android.util.Base64
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.trycatchers.hotel.data.dtos.UserDto
 import com.trycatchers.hotel.data.models.Booking
 import com.trycatchers.hotel.data.repositories.BookingRepository
 import com.trycatchers.hotel.data.repositories.SessionRepository
@@ -85,6 +86,7 @@ constructor(
 
     private val _uiState = MutableStateFlow(UserAccountUiState())
     val uiState: StateFlow<UserAccountUiState> = _uiState.asStateFlow()
+    val currentUser: StateFlow<UserDto?> = sessionRepository.currentUser
 
     init {
         loadBookings()

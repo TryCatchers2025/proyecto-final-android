@@ -2,6 +2,7 @@ package com.trycatchers.hotel.di
 
 import com.squareup.moshi.Moshi
 import com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterFactory
+import com.trycatchers.hotel.data.api.AuthService
 import com.trycatchers.hotel.data.api.BookingService
 import com.trycatchers.hotel.data.api.ReviewService
 import com.trycatchers.hotel.data.api.RoomService
@@ -61,4 +62,9 @@ object ApiModule {
     @Provides
     fun provideRoomService(retrofit: Retrofit): RoomService =
         retrofit.create(RoomService::class.java)
+
+    @Singleton
+    @Provides
+    fun provideAuthService(retrofit: Retrofit): AuthService =
+        retrofit.create(AuthService::class.java)
 }

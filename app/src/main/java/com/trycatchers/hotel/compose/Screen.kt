@@ -29,6 +29,9 @@ sealed class Screen(
 
     data object RoomCatalog : Screen("room-catalog")
     data object UserAccount : Screen("user-account")
+    data object UserProfile : Screen("user-profile")
+    data object Login : Screen("login-menu")
+    data object Register : Screen("register")
     data object RoomDetails :
         Screen(
             "room-details/{roomId}",
@@ -91,6 +94,9 @@ sealed class Screen(
                 BookingSummary,
                 BookingPayment,
                 BookingDetail,
+                Login,
+                UserProfile,
+                Register,
             )
 
         fun fromRoute(route: String?): Screen? = all.firstOrNull { it.matches(route) }
