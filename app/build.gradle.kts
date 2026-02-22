@@ -24,8 +24,8 @@ android {
 
     buildTypes {
         debug {
-            buildConfigField("String", "API_BASE_URL", "\"http://10.0.2.2:3000/api/\"")
-            //buildConfigField("String", "API_BASE_URL", "\"http://vps-7c25fcfc.vps.ovh.ca/hotel/api/\"")
+            //buildConfigField("String", "API_BASE_URL", "\"http://10.0.2.2:3000/api/\"")
+            buildConfigField("String", "API_BASE_URL", "\"http://vps-7c25fcfc.vps.ovh.ca/hotel/api/\"")
         }
         release {
             isMinifyEnabled = false

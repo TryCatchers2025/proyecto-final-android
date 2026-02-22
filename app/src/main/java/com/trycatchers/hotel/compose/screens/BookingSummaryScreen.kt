@@ -144,7 +144,7 @@ private fun BookingSummaryContent(
                 CircularProgressIndicator(modifier = Modifier.size(18.dp), strokeWidth = 2.dp)
                 Spacer(modifier = Modifier.width(12.dp))
             }
-            Text(text = "Ir a pago")
+            Text(text = "Reservar")
         }
     }
 }
