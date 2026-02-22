@@ -14,6 +14,7 @@ data class RoomSearchFilters(
     val isVip: Boolean = false,
     val minPrice: Int? = null,
     val maxPrice: Int? = null,
+    val minimumRating: Float? = null,
 ) {
 
     fun toQueryMap(): Map<String, String> = buildMap {
@@ -26,7 +27,8 @@ data class RoomSearchFilters(
         if (needsExtraBed) put("extraBed", "true")
         if (isVip) put("vip", "true")
 
-        minPrice?.let { put("pricePerNightMin", it.toString()) }
-        maxPrice?.let { put("pricePerNightMax", it.toString()) }
+        minPrice?.let { put("priceMin", it.toString()) }
+        maxPrice?.let { put("priceMax", it.toString()) }
+        minimumRating?.let { put("minimumRating", it.toString()) }
     }
 }
