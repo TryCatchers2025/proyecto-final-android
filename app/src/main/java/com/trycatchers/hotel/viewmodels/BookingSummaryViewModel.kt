@@ -7,6 +7,7 @@ import com.trycatchers.hotel.data.dtos.CreateBookingRequest
 import com.trycatchers.hotel.data.models.Room
 import com.trycatchers.hotel.data.repositories.BookingRepository
 import com.trycatchers.hotel.data.repositories.RoomRepository
+import com.trycatchers.hotel.data.repositories.SessionRepository
 import com.trycatchers.hotel.utils.formatApiDate
 import com.trycatchers.hotel.utils.formatDisplayDate
 import com.trycatchers.hotel.utils.millisToLocalDate
@@ -32,6 +33,8 @@ data class BookingSummaryUiState(
     val startDateLabel: String = "",
     val endDateLabel: String = "",
     val errorMessage: String? = null,
+    val discount: Double = 0.0,
+    val isVip: Boolean = false,
 ) {
     val formattedPricePerNight: String
         get() = formatCurrency(pricePerNight)
@@ -52,13 +55,13 @@ sealed interface BookingSummaryEvent {
 /**
  * ViewModel para la pantalla de resumen de reserva.
  *
- * Carga los datos de la habitación, calcula el precio estimado para el preview
- * y crea la reserva en el backend al confirmar. El precio definitivo siempre
- * lo calcula el servidor; el cálculo local es solo informativo.
+ * Carga los datos de la habitación, calcula el precio estimado para el preview y crea la reserva en
+ * el backend al confirmar. El precio definitivo siempre lo calcula el servidor; el cálculo local es
+ * solo informativo.
  *
- * El userId se omite intencionalmente del request: el backend lo extrae de la
- * sesión JWT para clientes, por lo que enviarlo desde el cliente es redundante
- * e introduce un vector de manipulación.
+ * El userId se omite intencionalmente del request: el backend lo extrae de la sesión JWT para
+ * clientes, por lo que enviarlo desde el cliente es redundante e introduce un vector de
+ * manipulación.
  */
 @HiltViewModel
 class BookingSummaryViewModel
@@ -67,6 +70,7 @@ constructor(
     private val roomRepository: RoomRepository,
     private val bookingRepository: BookingRepository,
     savedStateHandle: SavedStateHandle,
+    private val sessionRepository: SessionRepository,
 ) : ViewModel() {
 
     private val roomId: String = savedStateHandle.get<String>("roomId") ?: ""
@@ -97,8 +101,11 @@ constructor(
                 val startDate = millisToLocalDate(startDateMillis)
                 val endDate = millisToLocalDate(endDateMillis)
                 val nights = max(1, ChronoUnit.DAYS.between(startDate, endDate).toInt())
-                val pricePerNight =
-                    calculateNightlyRate(room.pricePerNight, room.offerPercentage ?: 0.0)
+                val user = sessionRepository.currentUser.value
+                val isVip = user?.vip == true
+                val offer = room.offerPercentage ?: 0.0
+                val totalDiscount = offer + if (isVip) 10.0 else 0.0
+                val pricePerNight = calculateNightlyRate(room.pricePerNight, totalDiscount)
                 val totalPrice = pricePerNight * nights
 
                 _uiState.update {
@@ -110,6 +117,8 @@ constructor(
                         totalPrice = totalPrice,
                         startDateLabel = formatDisplayDate(startDate),
                         endDateLabel = formatDisplayDate(endDate),
+                        discount = totalDiscount,
+                        isVip = isVip
                     )
                 }
             } catch (error: Exception) {
@@ -150,7 +159,6 @@ constructor(
             return
         }
 
-        // Client-side validation before calling the backend
         val startDate = millisToLocalDate(startDateMillis)
         val endDate = millisToLocalDate(endDateMillis)
         val today = LocalDate.now()
