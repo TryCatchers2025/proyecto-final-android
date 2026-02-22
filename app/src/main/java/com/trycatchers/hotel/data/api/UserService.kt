@@ -15,12 +15,15 @@ interface UserService {
     @GET("users") suspend fun getAllUsers(): List<UserDto>
     @GET("users/me") suspend fun getMe(): Response<UserDto>
 
-    @GET("users/{id}") suspend fun getUserById(@Path("id") id: String): UserDto
+    @GET("users/{id}")
+    suspend fun getUserById(@Path("id") id: String): UserDto
 
-    @POST("users") suspend fun createUser(@Body user: UserDto): UserDto
+    @POST("users")
+    suspend fun createUser(@Body user: UserDto): UserDto
 
     @PUT("users/{id}")
     suspend fun updateUser(@Path("id") id: String, @Body user: UserDto): UserDto
 
-    @DELETE("users/{id}") suspend fun deleteUser(@Path("id") id: String)
+    @DELETE("users/{id}")
+    suspend fun deleteUser(@Path("id") id: String)
 }

@@ -9,7 +9,9 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
 import com.trycatchers.hotel.utils.formatDate
 
@@ -17,6 +19,7 @@ import com.trycatchers.hotel.utils.formatDate
 fun DatePickerRange(
     startDate: Long? = null,
     endDate: Long? = null,
+    labelTextStyle: TextStyle = MaterialTheme.typography.bodyLarge,
     modifier: Modifier = Modifier,
     onDateRangeSelected: (Pair<Long?, Long?>) -> Unit
 ) {
@@ -32,6 +35,7 @@ fun DatePickerRange(
             hasInteracted = hasInteracted,
             startDateMillis = startDateMillis,
             endDateMillis = endDateMillis,
+            labelTextStyle = labelTextStyle,
             onFieldsClick = {
                 hasInteracted = true
                 showDateRangePicker = true
@@ -61,8 +65,9 @@ private fun DateRangeFields(
     hasInteracted: Boolean,
     startDateMillis: Long?,
     endDateMillis: Long?,
+    labelTextStyle: TextStyle,
     onFieldsClick: () -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
 ) {
     val showError = hasInteracted && (startDateMillis == null || endDateMillis == null)
     val borderColor =
@@ -96,7 +101,7 @@ private fun DateRangeFields(
                         )
                         Text(
                             text = startDate.ifEmpty { "DD/MM/YYYY" },
-                            style = MaterialTheme.typography.bodyLarge,
+                            style = labelTextStyle,
                             color = labelColor
                         )
                     }
@@ -121,7 +126,7 @@ private fun DateRangeFields(
                         )
                         Text(
                             text = endDate.ifEmpty { "DD/MM/YYYY" },
-                            style = MaterialTheme.typography.bodyLarge,
+                            style = labelTextStyle,
                             color = labelColor
                         )
                     }
