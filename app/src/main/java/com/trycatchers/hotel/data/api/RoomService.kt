@@ -13,15 +13,15 @@ interface RoomService {
     @GET("api/rooms")
     suspend fun getAllRooms(): List<RoomDto>
 
-    @GET("rooms/{id}")
+    @GET("api/rooms/{id}")
     suspend fun getRoomById(@Path("id") id: String): RoomDto
 
-    @POST("rooms")
+    @POST("api/rooms")
     suspend fun createRoom(@Body room: RoomDto): RoomDto
 
-    @PATCH("rooms/{id}")
+    @PATCH("api/rooms/{id}")
     suspend fun updateRoom(@Path("id") id: String, @Body room: RoomDto): RoomDto
 
-    @DELETE("rooms/{id}")
+    @DELETE("api/rooms/{id}")
     suspend fun deleteRoom(@Path("id") id: String)
 }
