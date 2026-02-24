@@ -16,7 +16,7 @@ interface AuthService {
     @POST("auth/login") suspend fun login(@Body user: LoginRequest): Response<LoginResponse>
 
     @Multipart
-    @POST("/api/auth/register")
+    @POST("auth/register")
     suspend fun register(
         @Part("email") email: RequestBody,
         @Part("firstName") firstName: RequestBody,
