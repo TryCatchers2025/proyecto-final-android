@@ -3,17 +3,24 @@ package com.trycatchers.hotel.compose.screens
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.DateRange
+import androidx.compose.material.icons.filled.Visibility
+import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
@@ -37,6 +44,7 @@ fun UserProfileScreen(
 
     val editableUser by viewModel.editableUser.collectAsState()
 
+
     editableUser?.let { user ->
         val fullPhotoUrl = user.photo?.let { photo ->
             val base = ApiConfig.BASE_DOMAIN.removeSuffix("/")
@@ -52,7 +60,7 @@ fun UserProfileScreen(
             onPasswordChange = { viewModel.updatePassword(it) },
             onBirthDateChange = { viewModel.updateBirthDate(it) },
             onSaveChanges = { viewModel.saveChanges() },
-            onLogout = { viewModel.logout() }
+            onLogout = { viewModel.logout() },
         )
     } ?: run {
         Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
@@ -63,6 +71,7 @@ fun UserProfileScreen(
 
 
 }
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun UserProfileView(
     user: UserDto,
@@ -72,9 +81,22 @@ fun UserProfileView(
     onPasswordChange: (String) -> Unit = {},
     onBirthDateChange: (String) -> Unit = {},
     onSaveChanges: () -> Unit = {},
-    onLogout: () -> Unit = {}
+    onLogout: () -> Unit = {},
+
 ) {
-    LazyColumn(
+    var passwordVisible by remember { mutableStateOf(false) }
+    var showDatePicker by remember { mutableStateOf(false) }
+
+    val datePickerState = rememberDatePickerState(
+        selectableDates = object : SelectableDates {
+            override fun isSelectableDate(utcTimeMillis: Long): Boolean {
+                // Bloquea fechas futuras
+                return utcTimeMillis <= System.currentTimeMillis()
+            }
+        }
+    )
+
+            LazyColumn(
         modifier = Modifier
             .fillMaxSize()
             .padding(horizontal = 16.dp),
@@ -92,6 +114,7 @@ fun UserProfileView(
                     Image(
                         painter = rememberAsyncImagePainter(photoUrl),
                         contentDescription = "Foto de perfil",
+                        contentScale = ContentScale.Crop,
                         modifier = Modifier
                             .size(100.dp)
                             .clip(CircleShape)
@@ -115,38 +138,63 @@ fun UserProfileView(
         }
 
         item {
-            ModernTextField(
-                label = "Nombre",
+            OutlinedTextField(
                 value = user.firstName,
                 onValueChange = onNameChange,
+                label = { Text("Nombre") },
+                singleLine = true,
+                modifier = Modifier.fillMaxWidth()
             )
         }
 
+
+
         item {
-            ModernTextField(
-                label = "Apellidos",
+            OutlinedTextField(
                 value = user.lastName,
                 onValueChange = onLastNameChange,
+                label = { Text("Apellidos") },
+                singleLine = true,
+                modifier = Modifier.fillMaxWidth()
             )
         }
 
         item {
-            ModernTextField(
-                label = "Contraseña",
-                value = user.password ?: "",
-                visualTransformation = PasswordVisualTransformation(),
-                onValueChange = onPasswordChange
+            OutlinedTextField(
+                value = user.password,
+                onValueChange = onPasswordChange,
+                label = { Text("Contraseña") },
+                visualTransformation = if (passwordVisible) VisualTransformation.None else PasswordVisualTransformation(),
+                modifier = Modifier.fillMaxWidth(),
+                trailingIcon = {
+                    IconButton(onClick = { passwordVisible = !passwordVisible }) {
+                        Icon(
+                            imageVector = if (passwordVisible) Icons.Default.VisibilityOff else Icons.Default.Visibility,
+                            contentDescription = if (passwordVisible) "Ocultar contraseña" else "Mostrar contraseña"
+                        )
+                    }
+                },
             )
         }
 
-        item {
-            ModernTextField(
-                label = "Fecha de Nacimiento",
-                value = user.birthDate,
-                onValueChange = onBirthDateChange,
-                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
-            )
-        }
+                item {
+                    OutlinedTextField(
+                        value = user.birthDate,
+                        onValueChange = {},
+                        readOnly = true,
+                        label = { Text("Fecha de Nacimiento") },
+                        modifier = Modifier.fillMaxWidth(),
+                        trailingIcon = {
+                            IconButton(onClick = { showDatePicker = true }) {
+                                Icon(
+                                    imageVector = Icons.Default.DateRange,
+                                    contentDescription = "Seleccionar fecha"
+                                )
+                            }
+                        }
+                    )
+                }
+
 
         item {
             Text("Información de Contacto", style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.primary)
@@ -201,8 +249,40 @@ fun UserProfileView(
         }
     }
 
+    if (showDatePicker) {
+        DatePickerDialog(
+            onDismissRequest = { showDatePicker = false },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        datePickerState.selectedDateMillis?.let { millis ->
+                            val formatter = java.text.SimpleDateFormat(
+                                "dd/MM/yyyy",
+                                java.util.Locale.getDefault()
+                            )
+                            formatter.isLenient = false
+                            val formattedDate = formatter.format(java.util.Date(millis))
 
+                            onBirthDateChange(formattedDate)
+                        }
+                        showDatePicker = false
+                    }
+                ) {
+                    Text("Aceptar")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showDatePicker = false }) {
+                    Text("Cancelar")
+                }
+            }
+        ) {
+            DatePicker(state = datePickerState)
+        }
+    }
 }
+
+
 
 @Composable
 fun InfoCard(label: String, value: String) {
@@ -219,44 +299,5 @@ fun InfoCard(label: String, value: String) {
         )
         Spacer(modifier = Modifier.height(4.dp))
         Text(text = value, style = MaterialTheme.typography.bodyLarge)
-    }
-}
-
-@Composable
-fun ModernTextField(
-    label: String,
-    value: String = "",
-    onValueChange: (String) -> Unit = {},
-    enabled: Boolean = true,
-    keyboardOptions: KeyboardOptions = KeyboardOptions.Default,
-    visualTransformation: VisualTransformation = VisualTransformation.None,
-    modifier: Modifier = Modifier
-) {
-    Column(
-        modifier = modifier,
-        verticalArrangement = Arrangement.spacedBy(8.dp)
-    ) {
-        Text(
-            text = label,
-            style = AppTypography.labelLarge,
-            color = if (enabled) MaterialTheme.colorScheme.onSurfaceVariant else Color.Gray
-        )
-        OutlinedTextField(
-            value = value,
-            onValueChange = onValueChange,
-            modifier = Modifier.fillMaxWidth(),
-            enabled = enabled,
-            keyboardOptions = keyboardOptions,
-            textStyle = MaterialTheme.typography.headlineMedium.copy(color = Color.Black),
-            colors = OutlinedTextFieldDefaults.colors(
-                focusedContainerColor = Color.White,
-                unfocusedContainerColor = Color.White,
-                disabledContainerColor = MaterialTheme.colorScheme.inversePrimary,
-                disabledTextColor = Color.Black,
-                disabledBorderColor = MaterialTheme.colorScheme.outlineVariant,
-                focusedBorderColor = MaterialTheme.colorScheme.primary,
-                unfocusedBorderColor = MaterialTheme.colorScheme.outline
-            )
-        )
     }
 }
