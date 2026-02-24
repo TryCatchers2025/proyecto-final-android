@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.DateRange
 import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.material3.*
@@ -24,6 +25,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.input.VisualTransformation
 import coil.compose.rememberAsyncImagePainter
+import com.trycatchers.hotel.compose.components.ui.DatePickerRange
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 
@@ -49,6 +51,17 @@ fun RegisterScreen(
     val genderOptions = listOf("masculino", "femenino", "prefiero no decirlo")
     var genderExpanded by remember { mutableStateOf(false) }
     var passwordVisible by remember { mutableStateOf(false) }
+
+    var showDatePicker by remember { mutableStateOf(false) }
+
+    val datePickerState = rememberDatePickerState(
+        selectableDates = object : SelectableDates {
+            override fun isSelectableDate(utcTimeMillis: Long): Boolean {
+                // Bloquea fechas futuras
+                return utcTimeMillis <= System.currentTimeMillis()
+            }
+        }
+    )
 
     LazyColumn(
         modifier = Modifier
@@ -111,9 +124,18 @@ fun RegisterScreen(
         item {
             OutlinedTextField(
                 value = user.birthDate,
-                onValueChange = { viewModel.updateBirthDate(it) },
-                label = { Text("Fecha de Nacimiento (DD/MM/YYYY)") },
-                modifier = Modifier.fillMaxWidth()
+                onValueChange = {},
+                readOnly = true,
+                label = { Text("Fecha de Nacimiento") },
+                modifier = Modifier.fillMaxWidth(),
+                trailingIcon = {
+                    IconButton(onClick = { showDatePicker = true }) {
+                        Icon(
+                            imageVector = Icons.Default.DateRange,
+                            contentDescription = "Seleccionar fecha"
+                        )
+                    }
+                }
             )
         }
 
@@ -216,5 +238,37 @@ fun RegisterScreen(
         }
 
         item { Spacer(modifier = Modifier.height(40.dp)) }
+    }
+
+    if (showDatePicker) {
+        DatePickerDialog(
+            onDismissRequest = { showDatePicker = false },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        datePickerState.selectedDateMillis?.let { millis ->
+                            val formatter = java.text.SimpleDateFormat(
+                                "dd/MM/yyyy",
+                                java.util.Locale.getDefault()
+                            )
+                            formatter.isLenient = false
+                            val formattedDate = formatter.format(java.util.Date(millis))
+
+                            viewModel.updateBirthDate(formattedDate)
+                        }
+                        showDatePicker = false
+                    }
+                ) {
+                    Text("Aceptar")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showDatePicker = false }) {
+                    Text("Cancelar")
+                }
+            }
+        ) {
+            DatePicker(state = datePickerState)
+        }
     }
 }
